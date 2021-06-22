@@ -1,18 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-
 import numpy as np
-import matplotlib.pyplot as plt
 
 import qcodes as qc
 from qcodes import Instrument
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import ComplexNumbers
-from qcodes.dataset.measurements import Measurement
-from qcodes.dataset.sqlite.database import initialise_or_create_database_at
-from qcodes.dataset.experiment_container import load_or_create_experiment
 
 class BuiltinImp(Parameter):
     '''
