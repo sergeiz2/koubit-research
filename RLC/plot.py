@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,27 +10,17 @@ import qcodes as qc
 from qcodes.dataset.sqlite.database import initialise_or_create_database_at
 from qcodes.dataset.experiment_container import load_or_create_experiment
 
-import RLC.py
+import RLC
+from RLC import Circuit
 
-"""
------------------
-CREATE EXPERIMENT
------------------
-"""
 
 '''
-Here we initialize a database for the experiment we're about to be running.
+-----------------
+HELPER METHODS
+-----------------
+Just a few helper methods for plotting.
+---------------------------------------
 '''
-db_path = os.path.join(os.getcwd(), 'LC_test.db')
-initialise_or_create_database_at(db_path)
-load_or_create_experiment(experiment_name='HelloElsie', sample_name="no sample")
-
-
-"""
------------
-MEASUREMENT
------------
-"""
 
 def gen_freqs(circ, ctr=None, rng=1E-3):  # Frequy spelling...
     if ctr == None:
@@ -78,6 +69,28 @@ def find_refs_ctr(circ, freqs, refs):  # This method is necessary to find the ce
     return (center, rng)
 
 
+'''
+---------------------
+INITIALIZE EXPERIMENT
+---------------------
+Here we initialize a database for the experiment we're about to be running.
+---------------------------------------
+'''
+
+db_path = os.path.join(os.getcwd(), 'LC_test.db')
+initialise_or_create_database_at(db_path)
+load_or_create_experiment(experiment_name='HelloElsie', sample_name="no sample")
+
+
+'''
+--------
+PLOTTING
+--------
+Actual plotting happens here!
+---------------------------------------
+'''
+
+
 circ = Circuit('test')
 # circ = Circuit('test2', )
 x1 = gen_freqs(circ)
@@ -101,11 +114,6 @@ axs[0].plot(x1, y1, 'b')
 axs[1].plot(x2, y2, 'r')
 
 plt.show()
-
-
-
-
-
 
 
 #  LocalWords:  inductor
