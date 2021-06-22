@@ -25,7 +25,6 @@ Just a few helper methods for plotting.
 def gen_freqs(circ, ctr=None, rng=1E-3):  # Frequy spelling...
     if ctr == None:
         center = circ.res_freq()  # 'center' because it's where the features we want to see on the graph are.
-        print(circ.res_freq())
     else:
         center = ctr
 
@@ -91,8 +90,7 @@ Actual plotting happens here!
 '''
 
 
-circ = Circuit('test')
-# circ = Circuit('test2', )
+circ = Circuit('elsie')
 x1 = gen_freqs(circ)
 y1 = gen_imps(circ, x1)
 
@@ -103,17 +101,14 @@ y2 = gen_refs(circ, x2)
 
 plt.figure()
 plt.plot(x1, y1, 'b')
-plt.title('imps test')
+plt.title('Impedances')
 
 plt.figure()
 plt.plot(x2, y2, 'r')
-plt.title('refs test')
+plt.title('Reflection Coefficients')
 
-fig, axs = plt.subplots(2, sharex=True)
-axs[0].plot(x1, y1, 'b')
-axs[1].plot(x2, y2, 'r')
+# fig, axs = plt.subplots(2, sharex=True)
+# axs[0].plot(x1, y1, 'b')
+# axs[1].plot(x2, y2, 'r')
 
 plt.show()
-
-
-#  LocalWords:  inductor
