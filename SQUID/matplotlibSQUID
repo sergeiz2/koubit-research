@@ -1,0 +1,124 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import os
+from time import sleep
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.constants import e, hbar
+
+import qcodes as qc
+from qcodes import Instrument
+from qcodes.instrument.parameter import Parameter
+from qcodes.dataset.measurements import Measurement
+from qcodes.dataset.plotting import plot_dataset
+from qcodes.dataset.sqlite.database import initialise_or_create_database_at
+from qcodes.dataset.experiment_container import load_or_create_experiment
+
+
+
+class TotalCurrent(Parameter):
+    '''
+    TotalCurrent parameter of SQUID. This class calculates the
+    total current in get_raw() which it overwrites from the
+    Parameter class. This construction allows us to associate our
+    own Parameter subclass with our instrument rather than
+    calculating parameter values in the Instrument class.
+    '''
+
+    # All parameter constructors should accept **kwargs and
+    # specify a name and an associated instrument, then pass
+    # all these on to super().__init__
+    def __init__(self, name, instrument, **kwargs):
+        super().__init__(name=name, instrument=instrument, **kwargs)
+
+    def get_raw(self):
+        #TODO: figure out this phase thing.
+        phase = np.pi/2.0
+        return 2.0 * self.root_instrument.critical_current.get_latest() * np.sin(phase) * np.cos(e / hbar * self.root_instrument.ext_flux.get_latest()) #This is the current response for a SQUID.
+
+class SQUID(Instrument):
+    """
+    QCoDeS driver for the SQUID. Contains parameters critical_current,
+    for the critical current of the SQUID, ext_flux for the (simulated)
+    applied external flux the SQUID sees, and total_current for the
+    total current that passes through the SQUID.
+    """
+
+    # All instrument constructors should accept **kwargs and
+    # specify a name, then pass both these on to super().__init__
+    def __init__(self, name, crit_current=1, **kwargs):
+        super().__init__(name, **kwargs)
+
+        self.add_parameter('critical_current',
+                           unit='A',
+                           label='Critical current',
+                           get_parser=float,
+                           get_cmd=None,
+                           set_cmd=None
+                           )
+
+        self.add_parameter('ext_flux',
+                           unit='T',
+                           label='Applied external flux',
+                           get_parser=float,
+                           get_cmd=None,
+                           set_cmd=None
+                           )
+
+        self.add_parameter('total_current',
+                           unit='A',
+                           label='Total current',
+                           parameter_class=TotalCurrent,
+                           get_parser=float,
+                           set_cmd=False
+                           )
+
+        self.calibrate(I_c=crit_current) #Properly sets critical current of SQUID and zeroes flux.
+
+    def get_idn(self): #Overwritten the get id function from the instrument superclass.
+        return {'vendor' : 'KOUBIT', 'model' : 'squiddy', 'serial': self.name + '-217', 'firmware' : '0.0'}
+
+    def calibrate(self, phi=0, I_c=1):
+        self.ext_flux(phi)
+        self.critical_current(I_c)
+
+"""
+-----------------
+CREATE EXPERIMENT
+-----------------
+"""
+
+'''
+Here we initialize a database for the experiment we're about to be running.
+'''
+db_path = os.path.join(os.getcwd(), 'squid_test.db')
+initialise_or_create_database_at(db_path)
+load_or_create_experiment(experiment_name='HelloSid', sample_name="no sample")
+
+
+"""
+-----------
+MEASUREMENT
+-----------
+"""
+'''
+Here we create a SQUID object and "measure" the current response of the SQUID.
+'''
+
+sid = SQUID('SidTheSQUID', crit_current=0.04) #Creating a SQUID
+meas = Measurement()
+
+sweep = np.linspace(0,5,int(1E2))
+fluxes, currents = [],[]
+
+#Calculating the currents vs the fluxes.
+for phi in sweep:
+    sid.ext_flux(phi)
+    fluxes.append(sid.ext_flux())
+    currents.append(sid.total_current())
+
+plt.plot(fluxes, currents, 'b-') #Plotting the currents vs the fluxes.
+
+# plt.show()
