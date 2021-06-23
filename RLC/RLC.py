@@ -35,7 +35,7 @@ class BuiltinImp(Parameter):
         try:
             return ((1.0 /  complex(0, w*L)) + complex(0, w*C))**-1
         except ZeroDivisionError:
-            print("Frequency was zero, but this results in division by zero. It will be reset to 1E-12.")
+            self.root_instrument.log.info("Frequency was zero, but this results in division by zero. It will be reset to 1E-12.")
             w = 1E-12
             return ((1.0 /  complex(0, w*L)) + complex(0, w*C))**-1
 

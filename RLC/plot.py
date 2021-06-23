@@ -33,7 +33,7 @@ def gen_freqs(circ, ctr=None, rng=1E-3):  # Frequy spelling...
     return freqs
 
 
-def gen_imps(cir, freqs):                   # No, impedances not monkeys.
+def gen_imps(circ, freqs):                   # No, impedances not monkeys.
     imps = np.zeros_like(freqs)
 
     for ind, freq in enumerate(freqs):
@@ -89,39 +89,79 @@ Actual plotting happens here!
 ---------------------------------------
 '''
 
+def plot1(circ):
+    x1 = gen_freqs(circ)
+    y1 = gen_imps(circ, x1)
 
-circ = Circuit('elsie')
-x1 = gen_freqs(circ)
-y1 = gen_imps(circ, x1)
+    refs_ctr = find_refs_ctr(circ, x1, y1)[0]
+    refs_rng = find_refs_ctr(circ, x1, y1)[1]
+    x2 = gen_freqs(circ, refs_ctr, refs_rng)
+    y2 = gen_refs(circ, x2)
 
-refs_ctr = find_refs_ctr(circ, x1, y1)[0]
-refs_rng = find_refs_ctr(circ, x1, y1)[1]
-x2 = gen_freqs(circ, refs_ctr, refs_rng)
-y2 = gen_refs(circ, x2)
+    plt.figure()
+    plt.plot(x1, y1, 'b')
+    plt.title('Impedances')
 
-plt.figure()
-plt.plot(x1, y1, 'b')
-plt.title('Impedances')
+    plt.figure()
+    plt.plot(x2, y2, 'r')
+    plt.title('Reflection Coefficients')
 
-plt.figure()
-plt.plot(x2, y2, 'r')
-plt.title('Reflection Coefficients')
+    circ.close()
+    print('Connection closed.')
 
-new = Circuit('new Elsie', ext_imp=complex(1.0, 100))
-x3 = gen_freqs(new, ctr=2.5E9, rng=2.5E9)
-y3 = gen_imps(new, x3)
-y4 = gen_refs(new, x3)
+def plot2(circ):
+    x3 = gen_freqs(circ, ctr=2.5E9, rng=2.5E9)
+    y3 = gen_imps(circ, x3)
+    y4 = gen_refs(circ, x3)
 
-plt.figure()
-plt.plot(x3, y3, 'b')
-plt.title('New Impedances')
+    plt.figure()
+    plt.plot(x3, y3, 'b')
+    plt.title('New Impedances')
 
-plt.figure()
-plt.plot(x3, y4, 'r')
-plt.title('New Reflection Coefficients')
+    plt.figure()
+    plt.plot(x3, y4, 'r')
+    plt.title('New Reflection Coefficients')
 
-# fig, axs = plt.subplots(2, sharex=True)
-# axs[0].plot(x1, y1, 'b')
-# axs[1].plot(x2, y2, 'r')
+    # fig, axs = plt.subplots(2, sharex=True)
+    # axs[0].plot(x1, y1, 'b')
+    # axs[1].plot(x2, y2, 'r')
+
+    circ.close()
+    print('Connection closed.')
+
+def plot_imps_x(circ, xs):
+    x = xs
+    y = gen_imps(circ, x)
+
+    plt.figure()
+    plt.plot(x, y, 'b')
+    plt.title('Impedances (plot_x)')
+
+def plot_refs_x(circ, xs):
+    x = xs
+    temp = gen_imps(circ, x)           #This is necessary to populate the parameters of circ in this context
+    y = gen_refs(circ, x)
+
+    plt.figure()
+    plt.plot(x, y, 'r')
+    plt.title('Reflection Coefficients (plot_x)')
+
+    circ.close()
+    print('Connection closed.')
+
+circ1 = Circuit('Elsie')
+plot1(circ1)
+
+circ2 = Circuit('new Elsie', ext_imp=complex(1.0, 100.0))
+plot2(circ2)
+
+circ3 = Circuit('new Elsie', ext_imp=complex(0.0, 100))
+plot2(circ3)
+
+circ4 = Circuit("plot_x", ext_imp=complex(1.0, 100.0))
+x = np.linspace(2.882898e9+20, 2.882898e9+60, 10000)
+plot_imps_x(circ4, x)
+x = np.linspace(0, 20e9, 10000)
+plot_refs_x(circ4, x)
 
 plt.show()
