@@ -107,6 +107,19 @@ plt.figure()
 plt.plot(x2, y2, 'r')
 plt.title('Reflection Coefficients')
 
+new = Circuit('new Elsie', ext_imp=complex(1.0, 100))
+x3 = gen_freqs(new, ctr=2.5E9, rng=2.5E9)
+y3 = gen_imps(new, x3)
+y4 = gen_refs(new, x3)
+
+plt.figure()
+plt.plot(x3, y3, 'b')
+plt.title('New Impedances')
+
+plt.figure()
+plt.plot(x3, y4, 'r')
+plt.title('New Reflection Coefficients')
+
 # fig, axs = plt.subplots(2, sharex=True)
 # axs[0].plot(x1, y1, 'b')
 # axs[1].plot(x2, y2, 'r')

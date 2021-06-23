@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 import numpy as np
 
 import qcodes as qc
 from qcodes import Instrument
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import ComplexNumbers
+
+from typing import Optional
 
 class BuiltinImp(Parameter):
     '''
@@ -170,7 +173,32 @@ class Circuit(Instrument):
         self.connect_message()
 
     def get_idn(self): #Overwritten the get id function from the instrument superclass.
-        return {'vendor' : 'KOUBIT', 'model' : 'Elsie', 'serial': self.name + '-217', 'firmware' : '0.0'}
+        return {'vendor' : 'KOUBIT', 'model' : 'Elsie', 'serial': self.name + '-217', 'ResFreq' : self.res_freq()}
+
+    def connect_message(self, idn_param: str = 'IDN',
+                        begin_time: Optional[float] = None) -> None:
+        """
+        Overwritten from qcodes.instrument.base.
+        Print a standard message on initial connection to an instrument.
+
+        Args:
+            idn_param: Name of parameter that returns ID dict.
+                Default ``IDN``.
+            begin_time: ``time.time()`` when init started.
+                Default is ``self._t0``, set at start of ``Instrument.__init__``.
+        """
+        # start with an empty dict, just in case an instrument doesn't
+        # heed our request to return all 4 fields.
+        idn = {'vendor': None, 'model': None,
+               'serial': None, 'ResFreq': None}
+        idn.update(self.get(idn_param))
+        t = time.time() - (begin_time or self._t0)
+
+        con_msg = ('Connected to: {vendor} {model} '
+                   '(serial:{serial}, Resonant Frequency:{ResFreq}) '
+                   'in {t:.2f}s'.format(t=t, **idn))
+        print(con_msg)
+        self.log.info(f"Connected to instrument: {idn}")
 
     def set_values(self, Z, V, Z_in, L, C):
         self.ext_imp(Z)
