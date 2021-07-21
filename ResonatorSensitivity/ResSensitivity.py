@@ -82,7 +82,7 @@ class Circuit():
         self.set_freq_sweep(stp_size)
         self.set_res_freq(L, C)
 
-        self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq)
+        self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq())
 
     def set_par_or_ser(self, ser=None):
         if ser == None:
