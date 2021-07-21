@@ -137,26 +137,26 @@ class Circuit():
             else:
                 pass
 
-    def set_freq_sweep(step):
+    def set_freq_sweep(self, step):
         w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #Lower bound frequency sweep
         w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #Upper bound frequency sweep
 
-        f_sweep = np.arange(w_l_bnd, w_u_bnd, step)
+        self.f_sweep = np.arange(w_l_bnd, w_u_bnd, step)
 
-    def calc_z():
-        zs = np.zeros_like(f_sweep)
+    def calc_z(self):
+        zs = np.zeros_like(self.f_sweep)
         if series:
-            for z, w in zip(zs, f_sweep):
+            for z, w in zip(zs, self.f_sweep):
                 z = 1.0/(complex(0, w*C)) + complex(0, w*L)
 
         elif not series:
-            for z, w in zip(zs, f_sweep):
+            for z, w in zip(zs, self.f_sweep):
                 z = 1.0/((complex(0, w*C)) + 1.0/complex(0, w*L))
 
             return zs
 
-    def calc_s11():
-        gs = np.zeros_like(f_sweep)
+    def calc_s11(self):
+        gs = np.zeros_like(self.f_sweep)
         for z, g in zip(calc_z(), gs):
             g = (z_in - (z_in + z))/(z_in + (z_in + z))
 
@@ -170,8 +170,9 @@ class Circuit():
 
         return dgs
 
-    def find_steep(gammas=calc_s11()):
+    def find_steep(self):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
+        gammas=calc_s11(self)
         slopes = get_slopes(gammas)
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
@@ -179,7 +180,7 @@ class Circuit():
         if max_slope != slopes[max_ind]:
             print("ERROR! max_slope != slopes[max_ind]!")
 
-        return {"frequency": f_sweep[max_ind],
+        return {"frequency": self.f_sweep[max_ind],
                 "derivative": max_slope}
 
 
