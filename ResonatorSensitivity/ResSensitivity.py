@@ -141,7 +141,7 @@ class Circuit():
         w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #Lower bound frequency sweep
         w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #Upper bound frequency sweep
 
-        freq_sweep = np.arange(w_l_bnd, w_u_bnd, step)
+        f_sweep = np.arange(w_l_bnd, w_u_bnd, step)
 
     def calc_z():
         zs = np.zeros_like(f_sweep)
