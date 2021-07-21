@@ -82,7 +82,7 @@ class Circuit():
         self.set_freq_sweep(stp_size)
         self.set_res_freq(L, C)
 
-        self.check_in_bounds(w_l_bnd, w_u_bnd, w_r)
+        self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq)
 
     def set_par_or_ser(self, ser=None):
         if ser == None:
@@ -101,7 +101,8 @@ class Circuit():
         else:
             series = ser
 
-    def set_LC(self, ind, cap):
+    #TODO: Logic does not account for changing only one of two
+    def set_LC(self, ind=None, cap=None):
         if not(ind or cap):
             self.L = float(input("Please input starting inductor value (H):"))
             self.C = float(input("Please input starting capacitor value (in F):"))
@@ -127,16 +128,16 @@ class Circuit():
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/10e9))
 
-    def check_in_bounds(lower_bound, upper_bound, freqency):
+    def check_in_bounds(self, lower_bound, upper_bound, frequency):
 
         if lower_bound <= frequency <= upper_bound:
             pass
         else:
-            print("The resonant frequency is not within your bounds. Do you want to change it?")
+            print("The resonant frequency is not within your bounds. Do you want to change L or C?")
             yes_or_no = input("Y/N:")
 
             if yes_or_no == "Y" or yes_or_no == "y":
-                set_LC()
+                self.set_LC()
             else:
                 pass
 
