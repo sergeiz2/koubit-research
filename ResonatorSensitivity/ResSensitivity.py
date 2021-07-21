@@ -18,7 +18,7 @@ w_u_bnd = None                  #Frequency sweep upper bound (Hz)
 def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
     is_series = circ.get_series()
-    ind = circ.get_L
+    ind = circ.get_L()
 
     circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
     refs_l_bnd = circ_l_bnd.calc_s11()
@@ -109,8 +109,8 @@ class Circuit():
             #NOTE: subdivisions smaller than nH and fF will probably break things.
 
         else:
-            L = ind
-            C = cap
+            self.L = ind
+            self.C = cap
 
     def get_L(self):
         return self.L
