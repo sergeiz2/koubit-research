@@ -6,12 +6,12 @@ import time
 import numpy as np
 # from numpy import diff
 
-L_l_bnd = 1*10e-9               #Inductance lower bound
-L_u_bnd = 100*10e-9             #Inductance upper bound
-L_step = 1*10e-9
-C_l_bnd = 1*10e-15              #Capacitance lower bound
-C_u_bnd = 100*10e-15            #Capacitance upper bound
-C_step = 1*10e-15
+L_l_bnd = 1e-9               #Inductance lower bound
+L_u_bnd = 100e-9             #Inductance upper bound
+L_step = 1e-9
+C_l_bnd = 1e-15              #Capacitance lower bound
+C_u_bnd = 100e-15            #Capacitance upper bound
+C_step = 1e-15
 w_l_bnd = None                  #Frequency sweep lower bound (Hz)
 w_u_bnd = None                  #Frequency sweep upper bound (Hz)
 
@@ -76,35 +76,35 @@ class Circuit():
     f_sweep = None              #Frequency sweep (Hz)
     s11 = None                  #S11 reflection coefficients.
 
-    def __init__(self, series=None, L=None, C=None, stp_size=1e-2, w_l_bnd=4*10e9, w_u_bnd=8*10e9):
-        set_LC(L, C)
-        set_par_or_ser(series)
-        set_freq_sweep(stp_size)
-        set_res_freq(L, C)
+    def __init__(self, series=None, L=None, C=None, stp_size=1e-2, w_l_bnd=4e9, w_u_bnd=8e9):
+        self.set_LC(L, C)
+        self.set_par_or_ser(series)
+        self.set_freq_sweep(stp_size)
+        self.set_res_freq(L, C)
 
-        check_in_bounds(w_l_bnd, w_u_bnd, w_r)
+        self.check_in_bounds(w_l_bnd, w_u_bnd, w_r)
 
-    def set_par_or_ser(ser=None):
+    def set_par_or_ser(self, ser=None):
         if ser == None:
             par_or_ser = input("Is this a parallel or a series circuit? (P/S):")
 
             if par_or_ser == "P" or par_or_ser == "p":
-                series = False
+                self.series = False
 
             elif par_or_ser == "S" or par_or_ser == "s":
-                series = True
+                self.series = True
 
             else:
                 print("Invalid selection!")
-                set_par_or_ser()
+                self.set_par_or_ser()
 
         else:
             series = ser
 
-    def set_LC(ind, cap):
+    def set_LC(self, ind, cap):
         if not(ind or cap):
-            L = input("Please input starting inductor value (H):")
-            C = input("Please input starting capacitor value (in F):")
+            self.L = float(input("Please input starting inductor value (H):"))
+            self.C = float(input("Please input starting capacitor value (in F):"))
             #NOTE: subdivisions smaller than nH and fF will probably break things.
 
         else:
@@ -138,10 +138,10 @@ class Circuit():
                 pass
 
     def set_freq_sweep(self, step):
-        w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #Lower bound frequency sweep
-        w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #Upper bound frequency sweep
+        w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz):") #Lower bound frequency sweep
+        w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz):") #Upper bound frequency sweep
 
-        self.f_sweep = np.arange(w_l_bnd, w_u_bnd, step)
+        self.f_sweep = np.arange(float(w_l_bnd), float(w_u_bnd), step)
 
     def calc_z(self):
         zs = np.zeros_like(self.f_sweep)
@@ -172,7 +172,7 @@ class Circuit():
 
     def find_steep(self):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
-        gammas=calc_s11(self)
+        gammas = calc_s11(self)
         slopes = get_slopes(gammas)
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
