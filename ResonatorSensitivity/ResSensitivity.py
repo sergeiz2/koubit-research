@@ -18,13 +18,13 @@ class Circuit():
     f_sweep = None              #Frequency sweep (Hz)
     s11 = None                  #S11 reflection coefficients.
 
-    def __init__(series, L, C, stp_size=1e-2, l_bnd=4*10e9, u_bnd=8*10e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=1e-2, w_l_bnd=4*10e9, w_u_bnd=8*10e9):
         set_LC(L, C)
-        set_par_or_ser()
+        set_par_or_ser(series)
         set_freq_sweep(stp_size)
         set_res_freq(L, C)
 
-        check_in_bounds(l_bnd, u_bnd, w_r)
+        check_in_bounds(w_l_bnd, w_u_bnd, w_r)
 
     def set_par_or_ser(ser=None):
         if ser == None:
