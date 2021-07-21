@@ -117,12 +117,15 @@ class Circuit():
     def get_C(self):
         return self.C
 
+    def get_res_freq(self):
+        return self.w_r
+
     def get_series(self):
         return self.series
 
     def set_res_freq(self, inductance, capacitance):
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
-        print("The circuit will resonate at a frequency of {} GHz".format(w/10e9))
+        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/10e9))
 
     def check_in_bounds(lower_bound, upper_bound, freqency):
 
