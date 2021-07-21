@@ -6,95 +6,103 @@ import time
 import numpy as np
 # from numpy import diff
 
-series = True                   #True for series circuit, false for parallel.
-C = 0.0                         #Capacitance (F)
-L = 0.0                         #Inductance (H)
-l_bnd = 0.0                     #Frequency sweep upper bound (Hz)
-u_bnd = 0.0                     #Frequency sweep lower bound (Hz)
-z_in = 50                       #Input impedance (Ohm)
-w_r = 0.0                       #Resonant frequency (Hz)
-step_size = 1e-2                #Frequency sweep step size (Hz)
-f_sweep = np.arange(0)          #Frequency sweep (Hz)
-s11 = np.arange(0)              #S11 reflection coefficients.
+class Circuit():
+    series = None               #True for series circuit, false for parallel.
+    L = None                    #Inductance (H)
+    C = None                    #Capacitance (F)
+    l_bnd = None                #Frequency sweep upper bound (Hz)
+    u_bnd = None                #Frequency sweep lower bound (Hz)
+    z_in = None                 #Input impedance (Ohm)
+    w_r = None                  #Resonant frequency (Hz)
+    step_size = None            #Frequency sweep step size (Hz)
+    f_sweep = None              #Frequency sweep (Hz)
+    s11 = None                  #S11 reflection coefficients.
 
-set_LC()
-set_par_or_ser()
-set_freq_sweep(step_size)
-set_res_freq(L, C)
-
-check_in_bounds(l_bnd, u_bnd, w_r)
-
-def set_par_or_ser():
-    par_or_ser = input("Is this a parallel or a series circuit? (P/S):")
-
-    if par_or_ser == "P" or par_or_ser == "p":
-        series = False
-    elif par_or_ser == "S" or par_or_ser == "s":
-        series = True
-    else:
-        print("Invalid selection!")
+    def __init__(series, L, C, stp_size=1e-2, l_bnd=4*10e9, u_bnd=8*10e9):
+        set_LC(L, C)
         set_par_or_ser()
+        set_freq_sweep(stp_size)
+        set_res_freq(L, C)
 
-def set_LC(ind=None, cap=None):
-    if ind or cap:
-        L = input("Please input starting inductor value (H):")
-        C = input("Please input starting capacitor value (in F):")
+        check_in_bounds(l_bnd, u_bnd, w_r)
 
-    else:
-        L = ind
-        C = cap
+    def set_par_or_ser(ser=None):
+        if ser == None:
+            par_or_ser = input("Is this a parallel or a series circuit? (P/S):")
 
-def set_res_freq(inductance, capacitance):
-    w_r = 1/(np.sqrt(L*C))
-    print("The circuit will resonate at a frequency of {} GHz".format(w/10e9))
+            if par_or_ser == "P" or par_or_ser == "p":
+                series = False
 
-def check_in_bounds(lower_bound, upper_bound, freqency):
+            elif par_or_ser == "S" or par_or_ser == "s":
+                series = True
 
-    if lower_bound <= frequency <= upper_bound:
-        pass
-    else:
-        print("This resonant frequency is not between your bounds. Do you want to change it?")
-        yes_or_no = input("Y/N:")
+            else:
+                print("Invalid selection!")
+                set_par_or_ser()
 
-        if yes_or_no == "Y" or yes_or_no == "y":
-            set_LC()
         else:
+            series = ser
+
+    def set_LC(ind=None, cap=None):
+        if not(ind or cap):
+            L = input("Please input starting inductor value (H):")
+            C = input("Please input starting capacitor value (in F):")
+
+        else:
+            L = ind
+            C = cap
+
+    def set_res_freq(inductance, capacitance):
+        w_r = 1/(np.sqrt(L*C))
+        print("The circuit will resonate at a frequency of {} GHz".format(w/10e9))
+
+    def check_in_bounds(lower_bound, upper_bound, freqency):
+
+        if lower_bound <= frequency <= upper_bound:
             pass
+        else:
+            print("The resonant frequency is not within your bounds. Do you want to change it?")
+            yes_or_no = input("Y/N:")
 
-def set_freq_sweep(step):
-    l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #lower bound freqency sweep
-    u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #upper bound freqency sweep
+            if yes_or_no == "Y" or yes_or_no == "y":
+                set_LC()
+            else:
+                pass
 
-    freq_sweep = np.arange(l_bnd, u_bnd, step)
+    def set_freq_sweep(step):
+        l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #lower bound freqency sweep
+        u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #upper bound freqency sweep
 
-def calc_z():
-    zs = np.zeros_like(f_sweep)
-    if series:
-        for z, w in zip(zs, f_sweep):
-            z = 1.0/(complex(0, w*C)) + complex(0, w*L)
+        freq_sweep = np.arange(l_bnd, u_bnd, step)
 
-    elif not series:
-        for z, w in zip(zs, f_sweep):
-            z = 1.0/((complex(0, w*C)) + 1.0/complex(0, w*L))
+    def calc_z():
+        zs = np.zeros_like(f_sweep)
+        if series:
+            for z, w in zip(zs, f_sweep):
+                z = 1.0/(complex(0, w*C)) + complex(0, w*L)
 
-    return zs
+        elif not series:
+            for z, w in zip(zs, f_sweep):
+                z = 1.0/((complex(0, w*C)) + 1.0/complex(0, w*L))
 
-def calc_s11():
-    gs = np.zeroes_like(f_sweep)
-    for z, g in zip(calc_z(), gs):
-        g = (z_in - (z_in + z))/(z_in + (z_in + z))
+            return zs
 
-    return gs
+    def calc_s11():
+        gs = np.zeroes_like(f_sweep)
+        for z, g in zip(calc_z(), gs):
+            g = (z_in - (z_in + z))/(z_in + (z_in + z))
 
-def find_steep(gammas):
-    #Calculates the discrete derivative of S11 w.r.t. frequency and returns the frequency which corresponds
-    #with the max of its extreme.
-    dgs = np.diff(gammas)/step_size
-    dgs = np.abs(dgs)
-    dgs = dgs.append(dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
-    max_ind = np.argmax(dgs)
+        return gs
 
-    return f_sweep[max_ind]
+    def find_steep(gammas):
+        #Calculates the discrete derivative of S11 w.r.t. frequency and returns the frequency which corresponds
+        #with the max of its extreme.
+        dgs = np.diff(gammas)/step_size
+        dgs = np.abs(dgs)
+        dgs = dgs.append(dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
+        max_ind = np.argmax(dgs)
+
+        return f_sweep[max_ind]
 
 
 
