@@ -76,7 +76,7 @@ class Circuit():
     f_sweep = None              #Frequency sweep (Hz)
     s11 = None                  #S11 reflection coefficients.
 
-    def __init__(self, series=None, L=None, C=None, stp_size=1e-2, w_l_bnd=4e9, w_u_bnd=8e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=5, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_par_or_ser(series)
         self.set_freq_sweep(stp_size)
@@ -120,8 +120,8 @@ class Circuit():
     def get_series(self):
         return self.series
 
-    def set_res_freq(inductance, capacitance):
-        w_r = 1/(np.sqrt(L*C))
+    def set_res_freq(self, inductance, capacitance):
+        self.w_r = 1/(np.sqrt(L*C))
         print("The circuit will resonate at a frequency of {} GHz".format(w/10e9))
 
     def check_in_bounds(lower_bound, upper_bound, freqency):
