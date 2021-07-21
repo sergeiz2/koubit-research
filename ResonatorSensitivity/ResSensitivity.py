@@ -111,14 +111,14 @@ class Circuit():
             L = ind
             C = cap
 
-    def get_L():
-        return L
+    def get_L(self):
+        return self.L
 
-    def get_C():
-        return C
+    def get_C(self):
+        return self.C
 
-    def get_series():
-        return series
+    def get_series(self):
+        return self.series
 
     def set_res_freq(inductance, capacitance):
         w_r = 1/(np.sqrt(L*C))
