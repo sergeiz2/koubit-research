@@ -38,34 +38,6 @@ def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
         else:
             find_ideal_C(circ, test_caps=test_caps[1:-2])
 
-
-#FIXME: Idk if this center thing is necessary at all.
-# def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
-#     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
-#     is_series = circ.get_series()
-#     ind = circ.get_L
-
-#     circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
-#     refs_l_bnd = circ_l_bnd.calc_s11()
-#     steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
-
-#     circ_ctr = circ
-#     refs_ctr = circ_r_bnd.calc_s11()
-#     steep_ctr = circ_r_bnd.find_steep(refs_r_bnd)
-
-#     circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
-#     refs_r_bnd = circ_r_bnd.calc_s11()
-#     steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
-
-#     if steep_l_bnd.get("derivative") > steep_ctr.get("derivative") and steep_ctr.get("derivative") < steep_r_bnd.get("derivative"):
-#         new_ctr_ind = (C_u_bnd - C_l_bnd)/(2 * C_step)
-#         find_ideal_C(circ=Circuit(series=is_series, L=ind, C=, test_caps=np.arange(C_l_bnd, ))
-#     elif steep_l_bnd.get("derivative") < steep_ctr.get("derivative") and steep_ctr.get("derivative") > steep_r_bnd.get("derivative"):
-#     elif steep_l_bnd.get("derivative") > steep_ctr.get("derivative") and steep_ctr.get("derivative") > steep_r_bnd.get("derivative"):
-#         if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
-#         else:
-
-
 class Circuit():
     series = None               #True for series circuit, false for parallel.
     L = None                    #Inductance (H)
@@ -81,6 +53,9 @@ class Circuit():
         self.set_par_or_ser(series)
         self.set_freq_sweep(stp_size)
         self.set_res_freq(L, C)
+
+        # FIXME: There's some shenanigans with the w_l_bnd and w_u_bnd. It's set ^^ and then
+        # also set in set_freq_sweep. It's also a variable at the top of the file.
 
         self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq())
 
