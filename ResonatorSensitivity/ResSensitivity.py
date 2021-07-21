@@ -156,7 +156,7 @@ class Circuit():
             return zs
 
     def calc_s11():
-        gs = np.zeroes_like(f_sweep)
+        gs = np.zeros_like(f_sweep)
         for z, g in zip(calc_z(), gs):
             g = (z_in - (z_in + z))/(z_in + (z_in + z))
 
