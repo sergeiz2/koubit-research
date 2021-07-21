@@ -6,12 +6,70 @@ import time
 import numpy as np
 # from numpy import diff
 
+L_l_bnd = 1*10e-9               #Inductance lower bound
+L_u_bnd = 100*10e-9             #Inductance upper bound
+L_step = 1*10e-9
+C_l_bnd = 1*10e-15              #Capacitance lower bound
+C_u_bnd = 100*10e-15            #Capacitance upper bound
+C_step = 1*10e-15
+w_l_bnd = None                  #Frequency sweep lower bound (Hz)
+w_u_bnd = None                  #Frequency sweep upper bound (Hz)
+
+def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
+    Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
+    is_series = circ.get_series()
+    ind = circ.get_L
+
+    circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
+    refs_l_bnd = circ_l_bnd.calc_s11()
+    steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
+
+    circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
+    refs_r_bnd = circ_r_bnd.calc_s11()
+    steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
+
+    while len(test_caps)>2:
+        if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
+            new_u_bnd_ind = int(len(test_caps)/2)
+            find_ideal_C(circ, test_caps=test_caps[0:new_u_bnd_ind])
+        elif steep_l_bnd.get("derivative") <  steep_r_bnd.get("derivative"):
+            new_l_bnd_ind = int(len(test_caps)/2)
+            find_ideal_C(circ, test_caps=test_caps[new_l_bnd_ind:-1])
+        else:
+            find_ideal_C(circ, test_caps=test_caps[1:-2])
+
+
+#FIXME: Idk if this center thing is necessary at all.
+# def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
+#     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
+#     is_series = circ.get_series()
+#     ind = circ.get_L
+
+#     circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
+#     refs_l_bnd = circ_l_bnd.calc_s11()
+#     steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
+
+#     circ_ctr = circ
+#     refs_ctr = circ_r_bnd.calc_s11()
+#     steep_ctr = circ_r_bnd.find_steep(refs_r_bnd)
+
+#     circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
+#     refs_r_bnd = circ_r_bnd.calc_s11()
+#     steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
+
+#     if steep_l_bnd.get("derivative") > steep_ctr.get("derivative") and steep_ctr.get("derivative") < steep_r_bnd.get("derivative"):
+#         new_ctr_ind = (C_u_bnd - C_l_bnd)/(2 * C_step)
+#         find_ideal_C(circ=Circuit(series=is_series, L=ind, C=, test_caps=np.arange(C_l_bnd, ))
+#     elif steep_l_bnd.get("derivative") < steep_ctr.get("derivative") and steep_ctr.get("derivative") > steep_r_bnd.get("derivative"):
+#     elif steep_l_bnd.get("derivative") > steep_ctr.get("derivative") and steep_ctr.get("derivative") > steep_r_bnd.get("derivative"):
+#         if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
+#         else:
+
+
 class Circuit():
     series = None               #True for series circuit, false for parallel.
     L = None                    #Inductance (H)
     C = None                    #Capacitance (F)
-    l_bnd = None                #Frequency sweep upper bound (Hz)
-    u_bnd = None                #Frequency sweep lower bound (Hz)
     z_in = None                 #Input impedance (Ohm)
     w_r = None                  #Resonant frequency (Hz)
     step_size = None            #Frequency sweep step size (Hz)
@@ -43,14 +101,24 @@ class Circuit():
         else:
             series = ser
 
-    def set_LC(ind=None, cap=None):
+    def set_LC(ind, cap):
         if not(ind or cap):
             L = input("Please input starting inductor value (H):")
             C = input("Please input starting capacitor value (in F):")
+            #NOTE: subdivisions smaller than nH and fF will probably break things.
 
         else:
             L = ind
             C = cap
+
+    def get_L():
+        return L
+
+    def get_C():
+        return C
+
+    def get_series():
+        return series
 
     def set_res_freq(inductance, capacitance):
         w_r = 1/(np.sqrt(L*C))
@@ -70,10 +138,10 @@ class Circuit():
                 pass
 
     def set_freq_sweep(step):
-        l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #lower bound freqency sweep
-        u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #upper bound freqency sweep
+        w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz)") #Lower bound frequency sweep
+        w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz)") #Upper bound frequency sweep
 
-        freq_sweep = np.arange(l_bnd, u_bnd, step)
+        freq_sweep = np.arange(w_l_bnd, w_u_bnd, step)
 
     def calc_z():
         zs = np.zeros_like(f_sweep)
@@ -94,15 +162,25 @@ class Circuit():
 
         return gs
 
-    def find_steep(gammas):
-        #Calculates the discrete derivative of S11 w.r.t. frequency and returns the frequency which corresponds
-        #with the max of its extreme.
+    def get_slopes(gammas):
+        # Calculates the discrete derivative of S11 w.r.t. frequency and returns the derivative array.
         dgs = np.diff(gammas)/step_size
         dgs = np.abs(dgs)
         dgs = dgs.append(dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
-        max_ind = np.argmax(dgs)
 
-        return f_sweep[max_ind]
+        return dgs
+
+    def find_steep(gammas=calc_s11()):
+        # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
+        slopes = get_slopes(gammas)
+        max_slope = np.max(slopes)
+        max_ind = np.argmax(slopes)
+
+        if max_slope != slopes[max_ind]:
+            print("ERROR! max_slope != slopes[max_ind]!")
+
+        return {"frequency": f_sweep[max_ind],
+                "derivative": max_slope}
 
 
 
