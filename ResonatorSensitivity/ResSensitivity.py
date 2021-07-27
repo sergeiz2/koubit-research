@@ -54,7 +54,7 @@ class Circuit():
     w_l_bnd = None              #Frequency sweep lower bound (Hz)
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
-    def __init__(self, series=None, L=None, C=None, stp_size=10, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=1000, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_Z_in(z_in)
         self.set_par_or_ser(series)
@@ -191,7 +191,7 @@ class Circuit():
         return zs
 
     def calc_s11(self):
-        gs = np.zeros_like(self.f_sweep)
+        gs = np.zeros_like(self.get_f_sweep())
         zs = self.calc_z()
         z_in = self.get_Z_in()
 
@@ -219,13 +219,23 @@ class Circuit():
         if max_slope != slopes[max_ind]:
             print("ERROR! max_slope != slopes[max_ind]!")
 
-        return {"frequency": self.f_sweep[max_ind],
+        return {"frequency": self.get_f_sweep()[max_ind],
                 "derivative": max_slope}
 
-    def plot(self, ys = None):
-        # Plots passed ys vs the frequencies specified in f_sweep.
-        xs = self.get_freq()
+    def plot_s11(self, gammas=None):
+        # Plots passed gammas vs the frequencies specified in f_sweep.
+        xs = self.get_f_sweep()
+        phase = np.angle(gammas)/(2*np.pi)
+        mag = np.abs(gammas)
 
-        plt.figure()
-        plt.plot(xs, ys, 'r')
-        plt.title('S11')
+        fig, axs = plt.subplots(2, sharex=True)
+        axs[0].plot(xs, mag, 'b')
+        axs[0].title.set_text('|S11|')
+        axs[0].set(ylabel='Ratio reflected')
+        axs[1].plot(xs, phase, 'r')
+        axs[1].title.set_text('Arg(S11)')
+        axs[1].set(ylabel='rad/2pi')
+        plt.xlabel('frequency')
+
+        fig.tight_layout()
+        plt.show()
