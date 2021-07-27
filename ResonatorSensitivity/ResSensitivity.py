@@ -59,10 +59,6 @@ class Circuit():
         self.set_w_u_bnd(w_u_bnd)
         self.set_f_sweep(stp_size)
         self.set_res_freq(self.get_L(), self.get_C())
-
-        # FIXME: There's some shenanigans with the w_l_bnd and w_u_bnd. It's set ^^ and then
-        # also set in set_f_sweep. It's also a variable at the top of the file.
-
         self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def set_par_or_ser(self, ser=None):
@@ -149,6 +145,8 @@ class Circuit():
 
             if yes_or_no == "Y" or yes_or_no == "y":
                 self.set_LC()
+                self.set_res_freq(self.get_L(), self.get_C())
+                self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
             else:
                 pass
 
