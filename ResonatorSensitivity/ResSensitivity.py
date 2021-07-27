@@ -4,6 +4,7 @@
 import os
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 # from numpy import diff
 
 L_l_bnd = 1e-9               #Inductance lower bound
@@ -51,11 +52,11 @@ class Circuit():
     def __init__(self, series=None, L=None, C=None, stp_size=5, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_par_or_ser(series)
-        self.set_freq_sweep(stp_size)
+        self.set_f_sweep(stp_size)
         self.set_res_freq(L, C)
 
         # FIXME: There's some shenanigans with the w_l_bnd and w_u_bnd. It's set ^^ and then
-        # also set in set_freq_sweep. It's also a variable at the top of the file.
+        # also set in set_f_sweep. It's also a variable at the top of the file.
 
         self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq())
 
@@ -99,6 +100,9 @@ class Circuit():
     def get_series(self):
         return self.series
 
+    def get_f_sweep(self):
+        return self.f_sweep
+
     def set_res_freq(self, inductance, capacitance):
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/10e9))
@@ -116,7 +120,7 @@ class Circuit():
             else:
                 pass
 
-    def set_freq_sweep(self, step):
+    def set_f_sweep(self, step):
         w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz):") #Lower bound frequency sweep
         w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz):") #Upper bound frequency sweep
 
@@ -161,3 +165,11 @@ class Circuit():
 
         return {"frequency": self.f_sweep[max_ind],
                 "derivative": max_slope}
+
+    def plot(self, ys = None):
+        # Plots passed ys vs the frequencies specified in f_sweep.
+        xs = self.get_freq()
+
+        plt.figure()
+        plt.plot(xs, ys, 'r')
+        plt.title('S11')
