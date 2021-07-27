@@ -54,7 +54,7 @@ class Circuit():
     w_l_bnd = None              #Frequency sweep lower bound (Hz)
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
-    def __init__(self, series=None, L=None, C=None, stp_size=100, w_l_bnd=4e9, w_u_bnd=8e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=1000, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_par_or_ser(series)
         self.set_w_l_bnd(w_l_bnd)
@@ -145,7 +145,7 @@ class Circuit():
         if lower_bound <= frequency <= upper_bound:
             pass
         else:
-            print("The resonant frequency {} GHz is not within your bound of {} GHz to {} GHz. Do you want to change L or C?".format(frequency/1e9, lower_bound/1e9, upper_bound/1e9))
+            print("The resonant frequency of {} GHz is not within your bound of {} GHz to {} GHz. Do you want to change L or C?".format(frequency/1e9, lower_bound/1e9, upper_bound/1e9))
             yes_or_no = input("Y/N:")
 
             if yes_or_no == "Y" or yes_or_no == "y":
@@ -165,19 +165,17 @@ class Circuit():
 
         if series:
             #TODO: This may be very inefficient
-            #FIXME: This is broken
-            zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()j)) + np.complex128(f*self.get_L()j) for f in fs]
+            zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
-            #     z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
+                # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
 
         elif not series:
             #TODO: This may be very inefficient
-            #FIXME: This is broken
-            zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())j) + 1.0/np.complex128(f*self.get_L()j)) for f in fs]
+            zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
             #     z = 1.0/((complex(0, w*self.get_C())) + 1.0/complex(0, w*self.get_L()))
 
-            return zs
+        return zs
 
     def calc_s11(self):
         gs = np.zeros_like(self.f_sweep)
