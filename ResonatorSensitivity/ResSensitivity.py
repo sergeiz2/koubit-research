@@ -93,6 +93,18 @@ class Circuit():
 
         print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
 
+    def set_w_l_bnd(self, l_bound=None):
+        self.w_l_bnd = l_bound
+
+    def set_w_u_bnd(self, u_bound=None):
+        self.w_u_bnd = u_bound
+
+    def get_w_l_bnd(self):
+        return self.w_l_bnd
+
+    def get_w_u_bnd(self):
+        return self.w_u_bnd
+
     def get_L(self):
         return self.L
 
@@ -115,10 +127,10 @@ class Circuit():
         print("DEBUG: w_r={}".format(self.get_res_freq()))
 
     def set_f_sweep(self, step):
-        self.w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz):") #Lower bound frequency sweep
-        self.w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz):") #Upper bound frequency sweep
+        self.set_w_l_bnd(float(input("Please enter the lower bound of your frequency sweep (Hz):"))) #Lower bound frequency sweep
+        self.set_w_u_bnd(float(input("Please enter the upper bound of your frequency sweep (Hz):"))) #Upper bound frequency sweep
 
-        self.f_sweep = np.arange(float(w_l_bnd), float(w_u_bnd), step)
+        self.f_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
         print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
     def check_in_bounds(self, lower_bound, upper_bound, frequency):
