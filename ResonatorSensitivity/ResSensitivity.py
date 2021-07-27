@@ -55,13 +55,18 @@ class Circuit():
     def __init__(self, series=None, L=None, C=None, stp_size=5, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_par_or_ser(series)
+        # FIXME: for debugging purposes, always requesting user input frequency bounds...
+        # self.set_w_l_bnd(w_l_bnd)
+        # self.set_w_u_bnd(w_u_bnd)
+        self.set_w_l_bnd()
+        self.set_w_u_bnd()
         self.set_f_sweep(stp_size)
         self.set_res_freq(L, C)
 
         # FIXME: There's some shenanigans with the w_l_bnd and w_u_bnd. It's set ^^ and then
         # also set in set_f_sweep. It's also a variable at the top of the file.
 
-        self.check_in_bounds(w_l_bnd, w_u_bnd, self.get_res_freq())
+        self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def set_par_or_ser(self, ser=None):
         if ser == None:
@@ -99,6 +104,14 @@ class Circuit():
     def set_w_u_bnd(self, u_bound=None):
         self.w_u_bnd = u_bound
 
+    def set_w_l_bnd(self):
+        # Overloaded function
+        self.set_w_l_bnd(float(input("Please enter the lower bound of your frequency sweep (Hz):"))) #Lower bound frequency sweep
+
+    def set_w_u_bnd(self):
+        # Overloaded function
+        self.set_w_u_bnd(float(input("Please enter the upper bound of your frequency sweep (Hz):"))) #Upper bound frequency sweep
+
     def get_w_l_bnd(self):
         return self.w_l_bnd
 
@@ -127,9 +140,6 @@ class Circuit():
         print("DEBUG: w_r={}".format(self.get_res_freq()))
 
     def set_f_sweep(self, step):
-        self.set_w_l_bnd(float(input("Please enter the lower bound of your frequency sweep (Hz):"))) #Lower bound frequency sweep
-        self.set_w_u_bnd(float(input("Please enter the upper bound of your frequency sweep (Hz):"))) #Upper bound frequency sweep
-
         self.f_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
         print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
