@@ -54,8 +54,9 @@ class Circuit():
     w_l_bnd = None              #Frequency sweep lower bound (Hz)
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
-    def __init__(self, series=None, L=None, C=None, stp_size=10, w_l_bnd=4e9, w_u_bnd=8e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=10, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
+        self.set_Z_in(z_in)
         self.set_par_or_ser(series)
         self.set_w_l_bnd(w_l_bnd)
         self.set_w_u_bnd(w_u_bnd)
@@ -92,6 +93,15 @@ class Circuit():
             self.C = cap
 
         print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
+
+    def set_Z_in(self, z_in=None):
+        if not(z_in):
+            cpx_str = input("Please input an input impedance value (Ohms, in complex form):")
+            self.z_in = np.complex128(cpx_str)
+
+        else:
+            self.z_in = z_in
+
 
     def set_w_l_bnd(self, l_bound=None):
         self.w_l_bnd = l_bound
@@ -182,10 +192,12 @@ class Circuit():
 
     def calc_s11(self):
         gs = np.zeros_like(self.f_sweep)
+        zs = self.calc_z()
         z_in = self.get_Z_in()
 
-        for z, g in zip(self.calc_z(), gs):
-            g = (z_in - (z_in + z))/(z_in + (z_in + z))
+        gs = (z_in - (z_in + zs))/(z_in + (z_in + zs))
+        # for z, g in zip(self.calc_z(), gs):
+        #     g = (z_in - (z_in + z))/(z_in + (z_in + z))
 
         return gs
 
