@@ -54,7 +54,7 @@ class Circuit():
     w_l_bnd = None              #Frequency sweep lower bound (Hz)
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
-    def __init__(self, series=None, L=None, C=None, stp_size=1000, w_l_bnd=4e9, w_u_bnd=8e9):
+    def __init__(self, series=None, L=None, C=None, stp_size=10, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
         self.set_par_or_ser(series)
         self.set_w_l_bnd(w_l_bnd)
@@ -161,17 +161,20 @@ class Circuit():
         series = self.get_is_series()
         fs = self.get_f_sweep()
         zs = np.zeros_like(fs, dtype=np.complex128)
-        rtn_zs = zs
+        C = self.get_C()
+        L = self.get_L()
 
+        #TODO: Check math
         if series:
-            #TODO: This may be very inefficient
-            zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
+            zs = np.complex128(1.0/fs*C*1j + fs*L*1j)
+            # zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
                 # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
 
         elif not series:
             #TODO: This may be very inefficient
-            zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
+            zs = np.complex128(1.0/fs*C*1j + 1.0/fs*L*1j)
+            # zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
             #     z = 1.0/((complex(0, w*self.get_C())) + 1.0/complex(0, w*self.get_L()))
 
