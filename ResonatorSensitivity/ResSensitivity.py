@@ -13,8 +13,9 @@ L_step = 1e-9
 C_l_bnd = 1e-15              #Capacitance lower bound
 C_u_bnd = 100e-15            #Capacitance upper bound
 C_step = 1e-15
-w_l_bnd = None                  #Frequency sweep lower bound (Hz)
-w_u_bnd = None                  #Frequency sweep upper bound (Hz)
+#FIXME: Duplicated as class variables:
+# w_l_bnd = None                  #Frequency sweep lower bound (Hz)
+# w_u_bnd = None                  #Frequency sweep upper bound (Hz)
 
 def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
@@ -48,6 +49,8 @@ class Circuit():
     step_size = None            #Frequency sweep step size (Hz)
     f_sweep = None              #Frequency sweep (Hz)
     s11 = None                  #S11 reflection coefficients.
+    w_l_bnd = None              #Frequency sweep lower bound (Hz)
+    w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
     def __init__(self, series=None, L=None, C=None, stp_size=5, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_LC(L, C)
@@ -80,13 +83,15 @@ class Circuit():
     #TODO: Logic does not account for changing only one of two
     def set_LC(self, ind=None, cap=None):
         if not(ind or cap):
-            self.L = float(input("Please input starting inductor value (H):"))
-            self.C = float(input("Please input starting capacitor value (in F):"))
+            self.L = float(input("Please input an inductor value (H):"))
+            self.C = float(input("Please input a capacitor value (in F):"))
             #NOTE: subdivisions smaller than nH and fF will probably break things.
 
         else:
             self.L = ind
             self.C = cap
+
+        print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
 
     def get_L(self):
         return self.L
@@ -107,6 +112,15 @@ class Circuit():
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/10e9))
 
+        print("DEBUG: w_r={}".format(self.get_res_freq()))
+
+    def set_f_sweep(self, step):
+        self.w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz):") #Lower bound frequency sweep
+        self.w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz):") #Upper bound frequency sweep
+
+        self.f_sweep = np.arange(float(w_l_bnd), float(w_u_bnd), step)
+        print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
+
     def check_in_bounds(self, lower_bound, upper_bound, frequency):
 
         if lower_bound <= frequency <= upper_bound:
@@ -120,11 +134,7 @@ class Circuit():
             else:
                 pass
 
-    def set_f_sweep(self, step):
-        w_l_bnd = input("Please enter the lower bound of your frequency sweep (Hz):") #Lower bound frequency sweep
-        w_u_bnd = input("Please enter the upper bound of your frequency sweep (Hz):") #Upper bound frequency sweep
-
-        self.f_sweep = np.arange(float(w_l_bnd), float(w_u_bnd), step)
+        print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
 
     def calc_z(self):
         zs = np.zeros_like(self.f_sweep)
