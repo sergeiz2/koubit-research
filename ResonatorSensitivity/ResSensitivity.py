@@ -127,7 +127,7 @@ class Circuit():
 
     def set_res_freq(self, inductance, capacitance):
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
-        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/10e9))
+        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/1e9))
 
         print("DEBUG: w_r={}".format(self.get_res_freq()))
 
@@ -140,7 +140,7 @@ class Circuit():
         if lower_bound <= frequency <= upper_bound:
             pass
         else:
-            print("The resonant frequency is not within your bounds. Do you want to change L or C?")
+            print("The resonant frequency {} GHz is not within your bound of {} GHz to {} GHz. Do you want to change L or C?".format(frequency/1e9, lower_bound/1e9, upper_bound/1e9))
             yes_or_no = input("Y/N:")
 
             if yes_or_no == "Y" or yes_or_no == "y":
