@@ -17,31 +17,33 @@ C_step = 1e-15
 # w_l_bnd = None                  #Frequency sweep lower bound (Hz)
 # w_u_bnd = None                  #Frequency sweep upper bound (Hz)
 
-def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
-    Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
-    is_series = circ.get_series()
-    ind = circ.get_L()
+# def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
+#     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
+#     #TODO: This is confusing series vs is_series?
+#     # is_series = circ.get_series()
+#     ind = circ.get_L()
 
-    circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
-    refs_l_bnd = circ_l_bnd.calc_s11()
-    steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
+#     #TODO: This is confusing series vs is_series?
+#     # circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
+#     refs_l_bnd = circ_l_bnd.calc_s11()
+#     steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
 
-    circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
-    refs_r_bnd = circ_r_bnd.calc_s11()
-    steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
+#     circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
+#     refs_r_bnd = circ_r_bnd.calc_s11()
+#     steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
 
-    while len(test_caps)>2:
-        if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
-            new_u_bnd_ind = int(len(test_caps)/2)
-            find_ideal_C(circ, test_caps=test_caps[0:new_u_bnd_ind])
-        elif steep_l_bnd.get("derivative") <  steep_r_bnd.get("derivative"):
-            new_l_bnd_ind = int(len(test_caps)/2)
-            find_ideal_C(circ, test_caps=test_caps[new_l_bnd_ind:-1])
-        else:
-            find_ideal_C(circ, test_caps=test_caps[1:-2])
+#     while len(test_caps)>2:
+#         if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
+#             new_u_bnd_ind = int(len(test_caps)/2)
+#             find_ideal_C(circ, test_caps=test_caps[0:new_u_bnd_ind])
+#         elif steep_l_bnd.get("derivative") <  steep_r_bnd.get("derivative"):
+#             new_l_bnd_ind = int(len(test_caps)/2)
+#             find_ideal_C(circ, test_caps=test_caps[new_l_bnd_ind:-1])
+#         else:
+#             find_ideal_C(circ, test_caps=test_caps[1:-2])
 
 class Circuit():
-    series = None               #True for series circuit, false for parallel.
+    is_series = None            #True for series circuit, false for parallel.
     L = None                    #Inductance (H)
     C = None                    #Capacitance (F)
     z_in = None                 #Input impedance (Ohm)
@@ -66,17 +68,17 @@ class Circuit():
             par_or_ser = input("Is this a parallel or a series circuit? (P/S):")
 
             if par_or_ser == "P" or par_or_ser == "p":
-                self.series = False
+                self.is_series = False
 
             elif par_or_ser == "S" or par_or_ser == "s":
-                self.series = True
+                self.is_series = True
 
             else:
                 print("Invalid selection!")
                 self.set_par_or_ser()
 
         else:
-            series = ser
+            is_series = ser
 
     #TODO: Logic does not account for changing only one of two
     def set_LC(self, ind=None, cap=None):
@@ -119,8 +121,8 @@ class Circuit():
     def get_res_freq(self):
         return self.w_r
 
-    def get_series(self):
-        return self.series
+    def get_is_series(self):
+        return self.is_series
 
     def get_f_sweep(self):
         return self.f_sweep
@@ -153,7 +155,9 @@ class Circuit():
         print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
 
     def calc_z(self):
+        series = self.get_is_series()
         zs = np.zeros_like(self.f_sweep)
+
         if series:
             for z, w in zip(zs, self.f_sweep):
                 z = 1.0/(complex(0, w*C)) + complex(0, w*L)
