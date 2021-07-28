@@ -50,6 +50,7 @@ class Circuit():
     w_r = None                  #Resonant frequency (Hz)
     step_size = None            #Frequency sweep step size (Hz)
     f_sweep = None              #Frequency sweep (Hz)
+    w_sweep = None              #Angular frequency sweep (rad/s)
     s11 = None                  #S11 reflection coefficients.
     w_l_bnd = None              #Frequency sweep lower bound (Hz)
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
@@ -96,9 +97,11 @@ class Circuit():
     #TODO: Logic does not account for changing only one of two
     def set_LC(self, ind=None, cap=None):
         if not(ind or cap):
-            self.L = float(input("Please input an inductor value (H):"))
-            self.C = float(input("Please input a capacitor value (in F):"))
             #NOTE: subdivisions smaller than nH and fF will probably break things.
+            if not(ind):
+                self.L = float(input("Please input an inductor value (H):"))
+            if not(cap):
+                self.C = float(input("Please input a capacitor value (in F):"))
 
         else:
             self.L = ind
@@ -152,6 +155,9 @@ class Circuit():
     def get_f_sweep(self):
         return self.f_sweep
 
+    def get_w_sweep(self):
+        return self.w_sweep
+
     def get_stp_size(self):
         return self.step_size
 
@@ -159,16 +165,18 @@ class Circuit():
         self.step_size = stp_size
 
     def calc_res_freq(self):
-        self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
+        self.w_r = 1/(2*np.pi*np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
         print("DEBUG: w_r={}".format(self.get_res_freq()))
 
     def set_f_sweep(self, step):
-        self.f_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
+        freq_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
+        self.f_sweep = freq_sweep
+        self.w_sweep = freq_sweep*2*np.pi
         print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
-    def check_in_bounds(self, lower_bound, upper_bound, frequency):
+    def check_in_bounds(self, lower_bound=None, upper_bound=None, frequency=None):
 
         if lower_bound <= frequency <= upper_bound:
             pass
@@ -187,30 +195,38 @@ class Circuit():
 
     def calc_z(self):
         series = self.get_is_series()
-        fs = self.get_f_sweep()
-        zs = np.zeros_like(fs, dtype=np.complex128)
+        ws = self.get_w_sweep()
+        zs = np.zeros_like(ws, dtype=np.complex128)
         C = self.get_C()
         L = self.get_L()
 
         #TODO: Check math
         if series:
-            zs = np.complex128(1.0/fs*C*1j + fs*L*1j)
-            print("DEBUG: series")
+            # NEW:
+            Z_C = np.complex128(1.0j/(ws*c))
+            Z_L = np.complex128(1.0j*ws*L)
+            zs = np.sqrt(np.square(Z_L + Z_C))
+            # OLD:
+            # zs = np.complex128(1.0/ws*C*1j + ws*L*1j)
             # zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
-            # for z, w in zip(zs, self.get_f_sweep()):
+            # for z, w in zip(zs, self.get_w_sweep()):
                 # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
+            print("DEBUG: series")
 
         elif not series:
-            print("DEBUG: not series")
-            zs = np.complex128(1.0/fs*C*1j + 1.0/fs*L*1j)
+            # NEW:
+            zs = np.complex128(-1.0j)*(L/C)/(ws*L - (1.0/(ws*C)) )
+            # OLD:
+            # zs = np.complex128(1.0/ws*C*1j + 1.0/ws*L*1j)
             # zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
-            # for z, w in zip(zs, self.get_f_sweep()):
+            # for z, w in zip(zs, self.get_w_sweep()):
             #     z = 1.0/((complex(0, w*self.get_C())) + 1.0/complex(0, w*self.get_L()))
+            print("DEBUG: not series")
 
         return zs
 
     def calc_s11(self):
-        gs = np.zeros_like(self.get_f_sweep())
+        gs = np.zeros_like(self.get_w_sweep())
         zs = self.calc_z()
         z_in = self.get_Z_in()
 
@@ -228,7 +244,7 @@ class Circuit():
 
     def find_steep(self, slopes=None, gammas=None):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
-        freqs = self.get_f_sweep()
+        freqs = self.get_w_sweep()
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
         max_freq = freqs[max_ind]
