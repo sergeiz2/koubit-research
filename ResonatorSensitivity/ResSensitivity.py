@@ -16,8 +16,8 @@ class Circuit():
     f_sweep = None              #Frequency sweep (Hz)
     w_sweep = None              #Angular frequency sweep (rad/s)
     s11 = None                  #S11 reflection coefficients.
-    w_l_bnd = None              #Frequency sweep lower bound (Hz)
-    w_u_bnd = None              #Frequency sweep upper bound (Hz)
+    w_l_bnd = None              #Frequency sweep lower bound (rad/s)
+    w_u_bnd = None              #Frequency sweep upper bound (rad/s)
 
     def __init__(self, series=None, L=None, C=None, stp_size=1000, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_w_l_bnd(w_l_bnd)
@@ -96,6 +96,14 @@ class Circuit():
 
     def set_w_u_bnd(self, u_bound=None):
         self.w_u_bnd = u_bound
+
+    def reset_bounds(self, center=6e9, rng=1e9):
+        step = self.get_stp_size()
+        self.set_w_l_bnd(center - rng)
+        self.set_w_u_bnd(center + rng)
+        self.set_f_sweep(step)
+        print('DEBUG: ' + self.__str__())
+
 
     # TODO: When done debugging, integrate user input into set_w_._bnd()
     # def set_w_l_bnd(self):
@@ -195,7 +203,7 @@ class Circuit():
 
     def get_slopes(self, gammas=None):
         # Calculates the discrete derivative of S11 w.r.t. frequency and returns the absolute value of derivative array.
-        dgs = np.diff(gammas)/self.get_stp_size()
+        dgs = np.grad(gamma, self.get_stp_size())
         dgs = np.abs(dgs)                          # We only care about the magnitude of the slope.
         dgs = np.append(dgs, dgs[-1])  # Just some dimension housekeeping. Duplicated and appended the last element.
 
