@@ -5,42 +5,6 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-# from numpy import diff
-
-L_l_bnd = 1e-9               #Inductance lower bound
-L_u_bnd = 100e-9             #Inductance upper bound
-L_step = 1e-9
-C_l_bnd = 1e-15              #Capacitance lower bound
-C_u_bnd = 100e-15            #Capacitance upper bound
-C_step = 1e-15
-#FIXME: Duplicated as class variables:
-# w_l_bnd = None                  #Frequency sweep lower bound (Hz)
-# w_u_bnd = None                  #Frequency sweep upper bound (Hz)
-
-# def find_ideal_C(circ, test_caps=np.arange(C_l_bnd, C_u_bnd, C_step)):
-#     Cs = np.arange(C_l_bnd, C_u_bnd, C_step)
-#     #TODO: This is confusing series vs is_series?
-#     # is_series = circ.get_series()
-#     ind = circ.get_L()
-
-#     #TODO: This is confusing series vs is_series?
-#     # circ_l_bnd = Circuit(series=is_series, L=ind, C=C_l_bnd)
-#     refs_l_bnd = circ_l_bnd.calc_s11()
-#     steep_l_bnd = circ_l_bnd.find_steep(refs_l_bnd)
-
-#     circ_r_bnd = Circuit(series=is_series, L=ind, C=C_r_bnd)
-#     refs_r_bnd = circ_r_bnd.calc_s11()
-#     steep_r_bnd = circ_r_bnd.find_steep(refs_r_bnd)
-
-#     while len(test_caps)>2:
-#         if steep_l_bnd.get("derivative") > steep_r_bnd.get("derivative"):
-#             new_u_bnd_ind = int(len(test_caps)/2)
-#             find_ideal_C(circ, test_caps=test_caps[0:new_u_bnd_ind])
-#         elif steep_l_bnd.get("derivative") <  steep_r_bnd.get("derivative"):
-#             new_l_bnd_ind = int(len(test_caps)/2)
-#             find_ideal_C(circ, test_caps=test_caps[new_l_bnd_ind:-1])
-#         else:
-#             find_ideal_C(circ, test_caps=test_caps[1:-2])
 
 class Circuit():
     is_series = None            #True for series circuit, false for parallel.
@@ -63,16 +27,16 @@ class Circuit():
         self.set_w_u_bnd(w_u_bnd)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
+        #FIXME: Hackish solution for only running check_in_bounds() when user inputs values (see FIXME in set_LC())
         self.calc_res_freq()
-        self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
+        # self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def __str__(self):
         dict = {'series': 'Yes' if self.get_is_series() else 'No',
                 'L': self.get_L(),
                 'C': self.get_C(),
                 'frequencies': '{} - {} Hz'.format(self.get_w_l_bnd(), self.get_w_u_bnd()),
-                'step_size': '{} Hz'.format(self.get_stp_size())
-        }
+                'step_size': '{} Hz'.format(self.get_stp_size())}
 
         return str(dict)
 
@@ -92,7 +56,7 @@ class Circuit():
                 self.set_par_or_ser()
 
         else:
-            is_series = ser
+            self.is_series = ser
 
     #TODO: Logic does not account for changing only one of two
     def set_LC(self, ind=None, cap=None):
@@ -102,12 +66,16 @@ class Circuit():
                 self.L = float(input("Please input an inductor value (H):"))
             if not(cap):
                 self.C = float(input("Please input a capacitor value (in F):"))
+            
+            #FIXME: Hackish solution for only running check_in_bounds() when user inputs values
+            self.calc_res_freq()
+            self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
         else:
             self.L = ind
             self.C = cap
 
-        print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
+        # print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
 
     def set_Z_in(self, z_in=None):
         if not(z_in):
@@ -168,13 +136,13 @@ class Circuit():
         self.w_r = 1/(2*np.pi*np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
-        print("DEBUG: w_r={}".format(self.get_res_freq()))
+        # print("DEBUG: w_r={}".format(self.get_res_freq()))
 
     def set_f_sweep(self, step):
         freq_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
         self.f_sweep = freq_sweep
         self.w_sweep = freq_sweep*2*np.pi
-        print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
+        # print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
     def check_in_bounds(self, lower_bound=None, upper_bound=None, frequency=None):
 
@@ -191,7 +159,7 @@ class Circuit():
             else:
                 pass
 
-        print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
+        # print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
 
     def calc_z(self):
         series = self.get_is_series()
@@ -200,28 +168,15 @@ class Circuit():
         C = self.get_C()
         L = self.get_L()
 
-        #TODO: Check math
         if series:
-            # NEW:
             Z_C = np.complex128(1.0j/(ws*C))
             Z_L = np.complex128(1.0j*ws*L)
             zs = np.sqrt(np.square(Z_L + Z_C))
-            # OLD:
-            # zs = np.complex128(1.0/ws*C*1j + ws*L*1j)
-            # zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
-            # for z, w in zip(zs, self.get_w_sweep()):
-                # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
-            print("DEBUG: series")
+            # print("DEBUG: series")
 
-        elif not series:
-            # NEW:
+        elif not(series):
             zs = np.complex128(-1.0j)*(L/C)/(ws*L - (1.0/(ws*C)) )
-            # OLD:
-            # zs = np.complex128(1.0/ws*C*1j + 1.0/ws*L*1j)
-            # zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
-            # for z, w in zip(zs, self.get_w_sweep()):
-            #     z = 1.0/((complex(0, w*self.get_C())) + 1.0/complex(0, w*self.get_L()))
-            print("DEBUG: not series")
+            # print("DEBUG: not series")
 
         return zs
 
@@ -235,10 +190,10 @@ class Circuit():
         return gs
 
     def get_slopes(self, gammas=None):
-        # Calculates the discrete derivative of S11 w.r.t. frequency and returns the derivative array.
+        # Calculates the discrete derivative of S11 w.r.t. frequency and returns the absolute value of derivative array.
         dgs = np.diff(gammas)/self.get_stp_size()
-        dgs = np.abs(dgs)
-        dgs = np.append(dgs, dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
+        dgs = np.abs(dgs)                          # We only care about the magnitude of the slope.
+        dgs = np.append(dgs, dgs[-1])  # Just some dimension housekeeping. Duplicated and appended the last element.
 
         return dgs
 
@@ -248,12 +203,34 @@ class Circuit():
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
         max_freq = freqs[max_ind]
+        step = self.get_stp_size()
+        find_steep_dict = None
+
+        #FIXME: This is not robust. It assumes a (relatively) small step size.
+        if step != 1.0:
+            subc_is_series = self.get_is_series()
+            subc_L = self.get_L()
+            subc_C = self.get_C()
+            subc_z_in = self.get_Z_in()
+            subc_w_l_bnd = max_freq - step
+            subc_w_u_bnd = max_freq + step
+            step = 1.0
+
+            circ = Circuit(subc_is_series, subc_L, subc_C, step, subc_z_in, subc_w_l_bnd, subc_w_u_bnd)
+            # print('DEBUG: ' + circ.__str__())
+            subc_gammas = circ.calc_s11()
+            # print('DEBUG: subc_gammas=' + str(subc_gammas))
+            subc_slopes = circ.get_slopes(subc_gammas)
+            # print('DEBUG: subc_slopes=' + str(subc_slopes))
+            find_steep_dict = circ.find_steep(subc_slopes, subc_gammas)
 
         if max_slope != slopes[max_ind]:
             print("DEBUG: max_slope != slopes[max_ind]")
 
-        return {"frequency": max_freq,
-                "derivative": max_slope}
+        find_steep_dict = {"frequency": max_freq,
+                           "derivative": max_slope}
+
+        return find_steep_dict
 
     def plot_s11(self, gammas=None):
         # Plots passed gammas vs the frequencies specified in f_sweep.
