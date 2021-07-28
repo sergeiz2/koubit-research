@@ -62,7 +62,7 @@ class Circuit():
         self.set_w_u_bnd(w_u_bnd)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
-        self.set_res_freq(self.get_L(), self.get_C())
+        self.calc_res_freq()
         self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def __str__(self):
@@ -158,9 +158,9 @@ class Circuit():
     def set_stp_size(self, stp_size=5):
         self.step_size = stp_size
 
-    def set_res_freq(self, inductance, capacitance):
+    def calc_res_freq(self):
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
-        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/1e9))
+        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
         print("DEBUG: w_r={}".format(self.get_res_freq()))
 
@@ -178,7 +178,7 @@ class Circuit():
 
             if yes_or_no == "Y" or yes_or_no == "y":
                 self.set_LC()
-                self.set_res_freq(self.get_L(), self.get_C())
+                self.calc_res_freq()
                 self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
             else:
                 pass
