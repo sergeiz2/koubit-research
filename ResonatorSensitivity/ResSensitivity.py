@@ -20,11 +20,11 @@ class Circuit():
     w_u_bnd = None              #Frequency sweep upper bound (Hz)
 
     def __init__(self, series=None, L=None, C=None, stp_size=1000, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
+        self.set_w_l_bnd(w_l_bnd)
+        self.set_w_u_bnd(w_u_bnd)
         self.set_LC(L, C)
         self.set_Z_in(z_in)
         self.set_par_or_ser(series)
-        self.set_w_l_bnd(w_l_bnd)
-        self.set_w_u_bnd(w_u_bnd)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
         #FIXME: Hackish solution for only running check_in_bounds() when user inputs values (see FIXME in set_LC())
@@ -66,7 +66,7 @@ class Circuit():
                 self.L = float(input("Please input an inductor value (H):"))
             if not(cap):
                 self.C = float(input("Please input a capacitor value (in F):"))
-            
+
             #FIXME: Hackish solution for only running check_in_bounds() when user inputs values
             self.calc_res_freq()
             self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
@@ -235,7 +235,7 @@ class Circuit():
     def plot_s11(self, gammas=None):
         # Plots passed gammas vs the frequencies specified in f_sweep.
         xs = self.get_f_sweep()
-        phase = np.angle(gammas)/(2*np.pi)
+        phase = np.angle(gammas, deg=True)
         mag = np.abs(gammas)
 
         fig, axs = plt.subplots(2, sharex=True)
