@@ -65,6 +65,17 @@ class Circuit():
         self.set_res_freq(self.get_L(), self.get_C())
         self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
+    def __str__(self):
+        dict = {'series': 'Yes' if self.get_is_series() else 'No',
+                'L': self.get_L(),
+                'C': self.get_C(),
+                'frequencies': '{} - {} Hz'.format(self.get_w_l_bnd(), self.get_w_u_bnd()),
+                'step_size': '{} Hz'.format(self.get_stp_size())
+        }
+
+        return str(dict)
+
+
     def set_par_or_ser(self, ser=None):
         if ser == None:
             par_or_ser = input("Is this a parallel or a series circuit? (P/S):")
@@ -184,12 +195,13 @@ class Circuit():
         #TODO: Check math
         if series:
             zs = np.complex128(1.0/fs*C*1j + fs*L*1j)
+            print("DEBUG: series")
             # zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
                 # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
 
         elif not series:
-            #TODO: This may be very inefficient
+            print("DEBUG: not series")
             zs = np.complex128(1.0/fs*C*1j + 1.0/fs*L*1j)
             # zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
             # for z, w in zip(zs, self.get_f_sweep()):
@@ -203,8 +215,6 @@ class Circuit():
         z_in = self.get_Z_in()
 
         gs = (z_in - (z_in + zs))/(z_in + (z_in + zs))
-        # for z, g in zip(self.calc_z(), gs):
-        #     g = (z_in - (z_in + z))/(z_in + (z_in + z))
 
         return gs
 
