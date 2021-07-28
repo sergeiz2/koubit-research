@@ -27,8 +27,9 @@ class Circuit():
         self.set_par_or_ser(series)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
-        #FIXME: Hackish solution for only running check_in_bounds() when user inputs values (see FIXME in set_LC())
-        self.calc_res_freq()
+        self.set_res_freq()
+
+        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
         # self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def __str__(self):
@@ -62,13 +63,17 @@ class Circuit():
     def set_LC(self, ind=None, cap=None):
         if not(ind or cap):
             #NOTE: subdivisions smaller than nH and fF will probably break things.
-            if not(ind):
+            if not(ind) and not(cap):
                 self.L = float(input("Please input an inductor value (H):"))
-            if not(cap):
+                self.C = float(input("Please input a capacitor value (in F):"))
+            elif not(ind) and cap:
+                self.L = float(input("Please input an inductor value (H):"))
+                self.C = cap
+            else:
+                self.L = ind
                 self.C = float(input("Please input a capacitor value (in F):"))
 
-            #FIXME: Hackish solution for only running check_in_bounds() when user inputs values
-            self.calc_res_freq()
+            self.set_res_freq()
             self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
         else:
@@ -132,9 +137,8 @@ class Circuit():
     def set_stp_size(self, stp_size=5):
         self.step_size = stp_size
 
-    def calc_res_freq(self):
+    def set_res_freq(self):
         self.w_r = 1/(2*np.pi*np.sqrt(self.get_L()*self.get_C()))
-        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
         # print("DEBUG: w_r={}".format(self.get_res_freq()))
 
@@ -154,7 +158,7 @@ class Circuit():
 
             if yes_or_no == "Y" or yes_or_no == "y":
                 self.set_LC()
-                self.calc_res_freq()
+                self.set_res_freq()
                 self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
             else:
                 pass
