@@ -27,8 +27,9 @@ class Circuit():
         self.set_w_u_bnd(w_u_bnd)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
+        #FIXME: Hackish solution for only running check_in_bounds() when user inputs values (see FIXME in set_LC())
         self.calc_res_freq()
-        self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
+        # self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def __str__(self):
         dict = {'series': 'Yes' if self.get_is_series() else 'No',
@@ -65,12 +66,15 @@ class Circuit():
                 self.L = float(input("Please input an inductor value (H):"))
             if not(cap):
                 self.C = float(input("Please input a capacitor value (in F):"))
+            #FIXME: Hackish solution for only running check_in_bounds() when user inputs values
+            self.calc_res_freq()
+            self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
         else:
             self.L = ind
             self.C = cap
 
-        print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
+        # print("DEBUG: L={}, C={}".format(self.get_L(), self.get_C()))
 
     def set_Z_in(self, z_in=None):
         if not(z_in):
@@ -131,13 +135,13 @@ class Circuit():
         self.w_r = 1/(2*np.pi*np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
-        print("DEBUG: w_r={}".format(self.get_res_freq()))
+        # print("DEBUG: w_r={}".format(self.get_res_freq()))
 
     def set_f_sweep(self, step):
         freq_sweep = np.arange(self.get_w_l_bnd(), self.get_w_u_bnd(), step)
         self.f_sweep = freq_sweep
         self.w_sweep = freq_sweep*2*np.pi
-        print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
+        # print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
     def check_in_bounds(self, lower_bound=None, upper_bound=None, frequency=None):
 
@@ -154,7 +158,7 @@ class Circuit():
             else:
                 pass
 
-        print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
+        # print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
 
     def calc_z(self):
         series = self.get_is_series()
@@ -163,28 +167,15 @@ class Circuit():
         C = self.get_C()
         L = self.get_L()
 
-        #TODO: Check math
         if series:
-            # NEW:
             Z_C = np.complex128(1.0j/(ws*C))
             Z_L = np.complex128(1.0j*ws*L)
             zs = np.sqrt(np.square(Z_L + Z_C))
-            # OLD:
-            # zs = np.complex128(1.0/ws*C*1j + ws*L*1j)
-            # zs[:] = [np.complex128(1.0)/(np.complex128(f*self.get_C()*1j)) + np.complex128(f*self.get_L()*1j) for f in fs]
-            # for z, w in zip(zs, self.get_w_sweep()):
-                # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
-            print("DEBUG: series")
+            # print("DEBUG: series")
 
         elif not(series):
-            # NEW:
             zs = np.complex128(-1.0j)*(L/C)/(ws*L - (1.0/(ws*C)) )
-            # OLD:
-            # zs = np.complex128(1.0/ws*C*1j + 1.0/ws*L*1j)
-            # zs[:] = [np.complex128(1.0)/((np.complex128(f*self.get_C())*1j) + 1.0/np.complex128(f*self.get_L()*1j)) for f in fs]
-            # for z, w in zip(zs, self.get_w_sweep()):
-            #     z = 1.0/((complex(0, w*self.get_C())) + 1.0/complex(0, w*self.get_L()))
-            print("DEBUG: not series")
+            # print("DEBUG: not series")
 
         return zs
 
