@@ -60,7 +60,8 @@ class Circuit():
         self.set_par_or_ser(series)
         self.set_w_l_bnd(w_l_bnd)
         self.set_w_u_bnd(w_u_bnd)
-        self.set_f_sweep(stp_size)
+        self.set_stp_size(stp_size)
+        self.set_f_sweep(self.get_stp_size())
         self.set_res_freq(self.get_L(), self.get_C())
         self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
@@ -140,6 +141,12 @@ class Circuit():
     def get_f_sweep(self):
         return self.f_sweep
 
+    def get_stp_size(self):
+        return self.step_size
+
+    def set_stp_size(self, stp_size=5):
+        self.step_size = stp_size
+
     def set_res_freq(self, inductance, capacitance):
         self.w_r = 1/(np.sqrt(self.get_L()*self.get_C()))
         print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()/1e9))
@@ -201,11 +208,11 @@ class Circuit():
 
         return gs
 
-    def get_slopes(gammas):
+    def get_slopes(self, gammas):
         # Calculates the discrete derivative of S11 w.r.t. frequency and returns the derivative array.
-        dgs = np.diff(gammas)/step_size
+        dgs = np.diff(gammas)/self.get_stp_size()
         dgs = np.abs(dgs)
-        dgs = dgs.append(dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
+        dgs = np.append(dgs, dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
 
         return dgs
 
