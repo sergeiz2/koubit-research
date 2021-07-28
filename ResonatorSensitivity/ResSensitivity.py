@@ -208,7 +208,7 @@ class Circuit():
 
         return gs
 
-    def get_slopes(self, gammas):
+    def get_slopes(self, gammas=None):
         # Calculates the discrete derivative of S11 w.r.t. frequency and returns the derivative array.
         dgs = np.diff(gammas)/self.get_stp_size()
         dgs = np.abs(dgs)
@@ -216,17 +216,17 @@ class Circuit():
 
         return dgs
 
-    def find_steep(self):
+    def find_steep(self, slopes=None, gammas=None):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
-        gammas = calc_s11(self)
-        slopes = get_slopes(gammas)
+        freqs = self.get_f_sweep()
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
+        max_freq = freqs[max_ind]
 
         if max_slope != slopes[max_ind]:
-            print("ERROR! max_slope != slopes[max_ind]!")
+            print("DEBUG: max_slope != slopes[max_ind]")
 
-        return {"frequency": self.get_f_sweep()[max_ind],
+        return {"frequency": max_freq,
                 "derivative": max_slope}
 
     def plot_s11(self, gammas=None):
