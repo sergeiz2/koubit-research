@@ -203,7 +203,7 @@ class Circuit():
         #TODO: Check math
         if series:
             # NEW:
-            Z_C = np.complex128(1.0j/(ws*c))
+            Z_C = np.complex128(1.0j/(ws*C))
             Z_L = np.complex128(1.0j*ws*L)
             zs = np.sqrt(np.square(Z_L + Z_C))
             # OLD:
