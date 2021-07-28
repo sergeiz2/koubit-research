@@ -71,8 +71,7 @@ class Circuit():
                 'L': self.get_L(),
                 'C': self.get_C(),
                 'frequencies': '{} - {} Hz'.format(self.get_w_l_bnd(), self.get_w_u_bnd()),
-                'step_size': '{} Hz'.format(self.get_stp_size())
-        }
+                'step_size': '{} Hz'.format(self.get_stp_size())}
 
         return str(dict)
 
@@ -92,7 +91,7 @@ class Circuit():
                 self.set_par_or_ser()
 
         else:
-            is_series = ser
+            self.is_series = ser
 
     #TODO: Logic does not account for changing only one of two
     def set_LC(self, ind=None, cap=None):
@@ -213,7 +212,7 @@ class Circuit():
                 # z = 1.0/(complex(0, w*self.get_C())) + complex(0, w*self.get_L())
             print("DEBUG: series")
 
-        elif not series:
+        elif not(series):
             # NEW:
             zs = np.complex128(-1.0j)*(L/C)/(ws*L - (1.0/(ws*C)) )
             # OLD:
@@ -235,25 +234,47 @@ class Circuit():
         return gs
 
     def get_slopes(self, gammas=None):
-        # Calculates the discrete derivative of S11 w.r.t. frequency and returns the derivative array.
+        # Calculates the discrete derivative of S11 w.r.t. frequency and returns the absolute value of derivative array.
         dgs = np.diff(gammas)/self.get_stp_size()
-        dgs = np.abs(dgs)
-        dgs = np.append(dgs, dgs[-1])   # Just some dimension housekeeping. Duplicated and appended the last element.
+        dgs = np.abs(dgs)                          # We only care about the magnitude of the slope.
+        dgs = np.append(dgs, dgs[-1])  # Just some dimension housekeeping. Duplicated and appended the last element.
 
         return dgs
 
     def find_steep(self, slopes=None, gammas=None):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
-        freqs = self.get_w_sweep()
+        freqs = self.get_f_sweep()
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
         max_freq = freqs[max_ind]
+        step = self.get_stp_size()
+        find_steep_dict = None
+
+        #FIXME: This is not robust. It assumes a (relatively) small step size.
+        if step != 1.0:
+            subc_is_series = self.get_is_series()
+            subc_L = self.get_L()
+            subc_C = self.get_C()
+            subc_z_in = self.get_Z_in()
+            subc_w_l_bnd = max_freq - step
+            subc_w_u_bnd = max_freq + step
+            step = 1.0
+
+            circ = Circuit(subc_is_series, subc_L, subc_C, step, subc_z_in, subc_w_l_bnd, subc_w_u_bnd)
+            # print('DEBUG: ' + circ.__str__())
+            subc_gammas = circ.calc_s11()
+            # print('DEBUG: subc_gammas=' + str(subc_gammas))
+            subc_slopes = circ.get_slopes(subc_gammas)
+            # print('DEBUG: subc_slopes=' + str(subc_slopes))
+            find_steep_dict = circ.find_steep(subc_slopes, subc_gammas)
 
         if max_slope != slopes[max_ind]:
             print("DEBUG: max_slope != slopes[max_ind]")
 
-        return {"frequency": max_freq,
-                "derivative": max_slope}
+        find_steep_dict = {"frequency": max_freq,
+                           "derivative": max_slope}
+
+        return find_steep_dict
 
     def plot_s11(self, gammas=None):
         # Plots passed gammas vs the frequencies specified in f_sweep.
