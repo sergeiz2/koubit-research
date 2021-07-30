@@ -16,8 +16,8 @@ class Circuit():
     f_sweep = None              #Frequency sweep (Hz)
     w_sweep = None              #Angular frequency sweep (rad/s)
     s11 = None                  #S11 reflection coefficients.
-    w_l_bnd = None              #Frequency sweep lower bound (Hz)
-    w_u_bnd = None              #Frequency sweep upper bound (Hz)
+    w_l_bnd = None              #Frequency sweep lower bound (rad/s)
+    w_u_bnd = None              #Frequency sweep upper bound (rad/s)
 
     def __init__(self, series=None, L=None, C=None, stp_size=1000, z_in=50, w_l_bnd=4e9, w_u_bnd=8e9):
         self.set_w_l_bnd(w_l_bnd)
@@ -27,15 +27,16 @@ class Circuit():
         self.set_par_or_ser(series)
         self.set_stp_size(stp_size)
         self.set_f_sweep(self.get_stp_size())
-        #FIXME: Hackish solution for only running check_in_bounds() when user inputs values (see FIXME in set_LC())
-        self.calc_res_freq()
+        self.set_res_freq()
+
         # self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
     def __str__(self):
         dict = {'series': 'Yes' if self.get_is_series() else 'No',
                 'L': self.get_L(),
                 'C': self.get_C(),
-                'frequencies': '{} - {} Hz'.format(self.get_w_l_bnd(), self.get_w_u_bnd()),
+                'frequencies': '{}-{} Hz'.format(self.get_w_l_bnd(), self.get_w_u_bnd()),
+                'resonant frequency': '{} Hz'.format(self.get_res_freq()),
                 'step_size': '{} Hz'.format(self.get_stp_size())}
 
         return str(dict)
@@ -62,13 +63,18 @@ class Circuit():
     def set_LC(self, ind=None, cap=None):
         if not(ind or cap):
             #NOTE: subdivisions smaller than nH and fF will probably break things.
-            if not(ind):
+            if not(ind) and not(cap):
                 self.L = float(input("Please input an inductor value (H):"))
-            if not(cap):
+                self.C = float(input("Please input a capacitor value (in F):"))
+            elif not(ind) and cap:
+                self.L = float(input("Please input an inductor value (H):"))
+                self.C = cap
+            else:
+                self.L = ind
                 self.C = float(input("Please input a capacitor value (in F):"))
 
-            #FIXME: Hackish solution for only running check_in_bounds() when user inputs values
-            self.calc_res_freq()
+            self.set_res_freq()
+            print("This circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
             self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
 
         else:
@@ -91,6 +97,14 @@ class Circuit():
 
     def set_w_u_bnd(self, u_bound=None):
         self.w_u_bnd = u_bound
+
+    def reset_bounds(self, center=6e9, rng=1e9):
+        step = self.get_stp_size()
+        self.set_w_l_bnd(center - rng)
+        self.set_w_u_bnd(center + rng)
+        self.set_f_sweep(step)
+        print('DEBUG: ' + self.__str__())
+
 
     # TODO: When done debugging, integrate user input into set_w_._bnd()
     # def set_w_l_bnd(self):
@@ -132,9 +146,8 @@ class Circuit():
     def set_stp_size(self, stp_size=5):
         self.step_size = stp_size
 
-    def calc_res_freq(self):
+    def set_res_freq(self):
         self.w_r = 1/(2*np.pi*np.sqrt(self.get_L()*self.get_C()))
-        print("The circuit will resonate at a frequency of {} GHz".format(self.get_res_freq()*1e-9))
 
         # print("DEBUG: w_r={}".format(self.get_res_freq()))
 
@@ -145,19 +158,22 @@ class Circuit():
         # print("DEBUG: f_sweep={}".format(self.get_f_sweep()))
 
     def check_in_bounds(self, lower_bound=None, upper_bound=None, frequency=None):
+        in_bounds = None
 
         if lower_bound <= frequency <= upper_bound:
-            pass
+            in_bounds = True
         else:
             print("The resonant frequency of {} GHz is not within your bound of {} GHz to {} GHz. Do you want to change L or C?".format(frequency/1e9, lower_bound/1e9, upper_bound/1e9))
             yes_or_no = input("Y/N:")
 
             if yes_or_no == "Y" or yes_or_no == "y":
                 self.set_LC()
-                self.calc_res_freq()
-                self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
+                self.set_res_freq()
+                in_bounds = self.check_in_bounds(self.get_w_l_bnd(), self.get_w_u_bnd(), self.get_res_freq())
             else:
-                pass
+                in_bounds = False
+
+        return in_bounds
 
         # print("DEBUG: lower_bound={}={}, upper_bound={}={}, frequency={}={}".format(self.w_l_bnd, lower_bound, self.w_u_bnd, upper_bound, self.get_res_freq(), frequency))
 
@@ -191,7 +207,7 @@ class Circuit():
 
     def get_slopes(self, gammas=None):
         # Calculates the discrete derivative of S11 w.r.t. frequency and returns the absolute value of derivative array.
-        dgs = np.diff(gammas)/self.get_stp_size()
+        dgs = np.gradient(gammas, self.get_stp_size())
         dgs = np.abs(dgs)                          # We only care about the magnitude of the slope.
         dgs = np.append(dgs, dgs[-1])  # Just some dimension housekeeping. Duplicated and appended the last element.
 
@@ -199,7 +215,7 @@ class Circuit():
 
     def find_steep(self, slopes=None, gammas=None):
         # Returns the frequency which corresponds to the steepest part of S11 (to maximize sensitivity.)
-        freqs = self.get_w_sweep()
+        freqs = self.get_f_sweep()
         max_slope = np.max(slopes)
         max_ind = np.argmax(slopes)
         max_freq = freqs[max_ind]
@@ -227,7 +243,7 @@ class Circuit():
         if max_slope != slopes[max_ind]:
             print("DEBUG: max_slope != slopes[max_ind]")
 
-        find_steep_dict = {"frequency": max_freq,
+        find_steep_dict = {"frequency": str(max_freq/1e9) + ' GHz',
                            "derivative": max_slope}
 
         return find_steep_dict
@@ -235,8 +251,16 @@ class Circuit():
     def plot_s11(self, gammas=None):
         # Plots passed gammas vs the frequencies specified in f_sweep.
         xs = self.get_f_sweep()
-        phase = np.angle(gammas, deg=True)
-        mag = np.abs(gammas)
+
+        try:
+            if gammas.any() == None:
+                raise ValueError
+            else:
+                phase = np.angle(gammas, deg=True)
+                mag = np.abs(gammas)
+        except:
+            phase = mag = []
+            raise ValueError('gammas parameter not given or \'None\'!')
 
         fig, axs = plt.subplots(2, sharex=True)
         axs[0].plot(xs, mag, 'b')
