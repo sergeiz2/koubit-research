@@ -1,4 +1,4 @@
-# Using the AWRDE API 
+# Working With the AWRDE API 
 This is a simple writeup of how to set up and use the AWR Design Environment (AWRDE) API to analyze circuits with Python.
 
 ## Description
@@ -8,18 +8,24 @@ AWRDE has an extensive API, and with a little work, the commands available throu
 
 ## Getting Started
 
+### Prerequisites
+
 This process was tested with Windows 10 Home, AWRDE 15 and 16, and Python 3.8.10. Officially the requirements are as follows:
 
 * **Python 3.7** or later
    * Python can be downloaded either from [Python Org](https://www.python.org/) or from from [Anaconda](https://www.anaconda.com/). If installing directly from Python Org, your Python install directory and the `/scripts` directory should both be added to your 'PATH' Environemental Variable in Windows.  
    
-     **NOTE 1:** The Anaconda installation guide recommends against adding Anaconda Python to your `PATH`; instead the proper libraries can be installed in the conda environment in which your code will run, and the appropriate environment can be selected in your IDE or activated before executing your code. That said, Anaconda's installation was the only Python installation *I used* and so I added it to my `PATH` anyways.  
+     NOTE 1: The Anaconda installation guide recommends against adding Anaconda Python to your `PATH`; instead the proper libraries can be installed in the conda environment in which your code will run, and the appropriate environment can be selected in your IDE or activated before executing your code. That said, Anaconda's installation was the only Python installation *I used* and so I added it to my `PATH` anyways.  
    
-     **NOTE 2:** [pypiwin32]()is not available on conda channels. Initially, I installed the packages I could with the Conda package manager and the rest with PIP, but this is also generally recommended against, since PIP and Conda don't always play nice together, but again, it worked for me. See more detail below.
+     NOTE 2: [pypiwin32]()is not available on conda channels. Initially, I installed the packages I could with the Conda package manager and the rest with PIP, but this is also generally recommended against, since PIP and Conda don't always play nice together, but again, it worked for me. See more detail below.
 
 * **pip3** is included by default with the Python binary installers starting with Python 3.4. You may need to install it explicitly if you're not using a Conda environment, though it's also a requirement for installing **pywin32** (below) so if going the Conda environement route, Conda will install it for you.
 
+* **Python IDE** an Integrated Development Environment which supports code completion will be very helpful for working with the AWRDE API. VScode with the Python extension is recommended by AWR, but they also note that
+  >   PyCharm, Spyder, and Wing are IDEs that have been verified to work with pyawr and code-completion. 
+
 ### Installing [**pywin32**](https://pypi.org/project/pywin32/) 
+
 This is a library which caused me some trouble. From the package description:  
    >  The Python for Win32 (pywin32) extension provides access to many of the Windows APIs from Python.
    >  ## Binaries 
@@ -38,45 +44,52 @@ I was able to set up *just* pywin32 in my conda environment as follows.
   Note that this is not the newest version of pywin32. For resasons that remain unclear to me, newer versions don't install properly.
 * Open a command prompt with Administrator privileges.
 * Again, activate your conda environment.
-* Navigate to `<your_anaconda_environment_location>/Scripts`.
+* Navigate to `<your_anaconda_environment_location>/Scripts`. 
+  * If not using an anaconda environment this will be in the same directory as your python.exe (try `where python`.)
 * Run `python pywin32_postinstall.py -install`.
 * Return to your other terminal.
 * Navigate to `<your_anaconda_environment_location>/Lib/site-packages/win32com/client`.
+  * If not using an anaconda environment same note applies.
 * Run `python makepy.py'.
 * This will pull up a window that looks like this:  
   
   ![Select Library Popup](./SelectLibrary.png)
-* Select the appropriate library and click "OK".
-   
-* **pyawr** is a library which incorporates win32com, the library which handles interfacing between the Python and Windows' [COM interface](https://en.wikipedia.org/wiki/Component_Object_Model) which allows different applications to "talk to" each other. 
+* Select the appropriate library (circled, in my case) and click "OK".
 
-### Installing
+NOTE: As mentioned above, the [official scripting guide](https://kb.awr.com/display/awrscripts/AWR+Scripting+in+Python) published by AWR has a slightly different procedure that uses the outdated **pypiwin32** library installed with `pip`. You will still need to navigate to your `<python install directory>/Lib/site-packages/win32com/client` and run `python makepy.py' to set up the library to work with AWRDE. 
+   
+### Installing pyawr
+
+[**pyawr**](https://pypi.org/project/pyawr/) is a library which incorporates win32com, the library which handles interfacing between the Python and Windows' [COM interface](https://en.wikipedia.org/wiki/Component_Object_Model) which allows different applications to "talk to" each other. To the best of my knowledge it is not availble though any Conda channels. with pywin32 sucessfully installed and the appropriate environmenet active, we can install pyawr with pip.
+* `pip install pyawr`. 
+
+### Testing pyawr
+
+Here's an example Python Script to Verify that pyawr works properly:
+* Open AWRDE and then open the built-in example LPF_Lumped.emp
+* Run the Python script.  
+* In the Python output terminal, the text output should be: `LPF`.
+```
+import pyawr.mwoffice as mwo
+awrde = mwo.CMWOffice()
+ 
+NumSchem = awrde.Project.Schematics.Count
+for s_idx in range(NumSchem):
+    schem = awrde.Project.Schematics[s_idx]
+    print(schem.Name)
+```
+
+## Working with the AWRDE API in Python
 
 * How/where to download your program
 * Any modifications needed to be made to files/folders
 
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
-
 ## Authors
 
-Contributors names and contact info
-
-ex. Sergei Zvenigorodsky
+Sergei Zvenigorodsky  
+<serge.zvenig@gmail.com>
 
 ## References
 
-## Acknowledgments
+Much of this infomration was adapted from [AWRDE Python Scripting guide](https://kb.awr.com/display/awrscripts/Python) which is definitely recommended ~~reading~~ skimming.  
 Readme template from [README-Template.md](https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)
