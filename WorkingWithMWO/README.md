@@ -52,13 +52,13 @@ In light of all this, I did neither of these things and set up an isolated virtu
 * Return to your other terminal.
 * Navigate to `<your_anaconda_environment_location>/Lib/site-packages/win32com/client`.
   * If not using an anaconda environment same note as above applies.
-* Run `python makepy.py'.
+* Run `python makepy.py`.
 * This will pull up a window that looks like this:  
   
   ![Select Library Popup](./SelectLibrary.png)
 * Select the appropriate library (circled, in my case) and click "OK".
 
-NOTE: As mentioned above, the [official scripting guide](https://kb.awr.com/display/awrscripts/AWR+Scripting+in+Python) published by AWR has a slightly different procedure that uses the outdated **pypiwin32** library installed with `pip`. You will still need to navigate to your `<python install directory>/Lib/site-packages/win32com/client` and run `python makepy.py' to set up the library to work with AWRDE. 
+NOTE: As mentioned above, the [official scripting guide](https://kb.awr.com/display/awrscripts/AWR+Scripting+in+Python) published by AWR has a slightly different procedure that uses the outdated **pypiwin32** library installed with `pip`. You will still need to navigate to your `<python install directory>/Lib/site-packages/win32com/client` and run `python makepy.py` to set up the library to work with AWRDE. 
    
 ### Installing pyawr
 
