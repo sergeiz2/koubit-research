@@ -15,17 +15,21 @@ This process was tested with Windows 10 Home, AWRDE 15 and 16, and Python 3.8.10
    
      **NOTE 1:** The Anaconda installation guide recommends against adding Anaconda Python to your `PATH`; instead the proper libraries can be installed in the conda environment in which your code will run, and the appropriate environment can be selected in your IDE or activated before executing your code. That said, Anaconda's installation was the only Python installation *I used* and so I added it to my `PATH` anyways.  
    
-     **NOTE 2:** Not all the packages necessary are available on conda channels. I installed the packages I could with the conda package manager and the rest with pip, but this is also generally recommended against, since pip and conda don't always play nice together, but again, it worked for me.
+     **NOTE 2:** [pypiwin32]()is not available on conda channels. Ininitally, I installed the packages I could with the conda package manager and the rest with pip, but this is also generally recommended against, since pip and conda don't always play nice together, but again, it worked for me. See more detail [below.]()
 
 * **pip3** is included by default with the Python binary installers starting with Python 3.4. You'll need to install it in your conda environemnt if you choose to go that route.
-* [**pywin32**](https://pypi.org/project/pywin32/) is a library which I was able to find only through the pip package manager. From the package description:
+* [**pywin32**](https://pypi.org/project/pywin32/) is a library which caused me some trouble. From the package description:  
    >  The Python for Win32 (pywin32) extension provides access to many of the Windows APIs from Python.
    >  ## Binaries 
-   >  By far the easiest way to use pywin32 is to grab binaries from the [most recent release](https://github.com/mhammond/pywin32/releases)
+   >  By far the easiest way to use pywin32 is to grab binaries from the [most recent release.](https://github.com/mhammond/pywin32/releases)
    >  ## Installing via PIP
-   >  You can install pywin32 via pip: `pip install pywin32`
+   >  You can install pywin32 via pip: `pip install pywin32`.
    >  Note that if you want to use pywin32 for “system wide” features, such as registering COM objects or implementing Windows Services, then you must run the following command from an elevated command prompt:
-   >  `python Scripts/pywin32_postinstall.py -install`
+   >  `python Scripts/pywin32_postinstall.py -install`.
+  * 
+  
+
+* [pypiwin32**](
    
 * **pyawr** is a library which incorporates win32com, the library which handles interfacing between the Python and Windows' [COM interface](https://en.wikipedia.org/wiki/Component_Object_Model) which allows different applications to "talk to" each other. 
 
