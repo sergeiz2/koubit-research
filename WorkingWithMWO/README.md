@@ -96,7 +96,7 @@ in your IDE. Once this is done, you can start messing around with code completio
 
 There's a Jupyter notebook with a quick tutorial in this folder as well.
 
-Another ~~good~~ reference is the API which is (very annoyingly) in pdf form and also not written for Python, making it a bit of a challenge to use on its own. I've uploaded the file to this github and also [linked](./ApiReference.pdf) it.
+Another ~~good~~ reference is the API which is (very annoyingly) in pdf form and also not written for Python, making it a bit of a challenge to use on its own. I've uploaded the file to this github and [linked it here](./ApiReference.pdf).
 
 ## Authors
 
