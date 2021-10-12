@@ -83,7 +83,7 @@ for s_idx in range(NumSchem):
 
 ## Working with the AWRDE API in Python
 
-For starting out working with AWRDE, the best reference is [The AWRDE API SCripting Guide](https://kb.awr.com/display/awrscripts/Python+Using+the+AWRDE+API+Scripting+Guide). 
+For starting out working with AWRDE, the best reference is [The AWRDE API Scripting Guide](https://kb.awr.com/display/awrscripts/Python+Using+the+AWRDE+API+Scripting+Guide). 
 
 It covers these steps in a bit more detail, but for comprehensiveness, there's a quick tutorial in the same folder as this README.
 
@@ -92,9 +92,11 @@ If you already have a circuit built and the project frequency sweep specified an
 import pyawr.mwoffice as mwo`                  #import awr module
 awrde = mwo.CMWOffice()                        #create awrde object
 ```
-in your IDE. Once this is done, you can start messing around with code completion to see how to do useful things.
+in your IDE. Once this is done, you can start messing around with code completion to see how to do useful things.  
 
-Another good reference is the API which is (very annoyingly) in pdf form and also not written for Python, makign it a bit of a challenge to use on its own. I've uploaded the file to this github and also [linked]() it.
+There's a Jupyter notebook with a quick tutorial in this folder as well.
+
+Another ~~good~~ reference is the API which is (very annoyingly) in pdf form and also not written for Python, making it a bit of a challenge to use on its own. I've uploaded the file to this github and also [linked](./ApiReference.pdf) it.
 
 ## Authors
 
