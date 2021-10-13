@@ -85,7 +85,7 @@ for s_idx in range(NumSchem):
 For working with AWRDE, the best reference is [The AWRDE API Scripting Guide](https://kb.awr.com/display/awrscripts/Python+Using+the+AWRDE+API+Scripting+Guide). 
 
 ### Tutorial
-The scripting guide covers some of these steps in some detail, but for comprehensiveness, there's a [Jupyter notebook with a quick tutorial](./AWRDE_Tutorial.ipynb) in the same folder as this README.  
+The scripting guide covers some of these steps in some detail, but for comprehensiveness, there's a [**Jupyter notebook with a quick tutorial**](./AWRDE_Tutorial.ipynb) in the same folder as this README.  
 
 If you already have a circuit built and the project frequency sweep specified and graphs added, you can try:
 ```
